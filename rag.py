@@ -140,7 +140,6 @@ class Rag:
         self.model_file = None
         self.llm = None
 
-        # self.load_llm()
         if torch.cuda.is_available():
             self.device = 'cuda'
             self.gpu_memory_bytes = torch.cuda.get_device_properties(0).total_memory
