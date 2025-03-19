@@ -810,7 +810,7 @@ class Rag:
         # before adding new focus news json files remove "focus_news_chunk_dict.pkl" and
         # "focus_news_faiss_vector_db.index" files for a completely new creation of the database or simply change which
         # new files should be read in the following lines, thus expanding the focus news database with the new files
-        focus_news_json_file_tmpl = 'focus_news_articles_{}.json'
+        focus_news_json_file_tmpl = 'focus_news/focus_news_articles_{}.json'
         focus_news_json_files_list = [focus_news_json_file_tmpl.format(f"0_{i}") for i in range(new_files, 0, -1)]
         focus_news_json_files_list += [focus_news_json_file_tmpl.format(i) for i in range(first_file_number,
                                                                                           last_file_number + 1)]
