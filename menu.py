@@ -23,7 +23,8 @@ class TextHandler(logging.Handler):
 
         def append():
             self.text.configure(state=ctk.NORMAL)
-            self.text.insert(ctk.END, msg + '\n\n')
+            if msg != "flash_attn is not installed. Using PyTorch native attention implementation.":
+                self.text.insert(ctk.END, msg + '\n\n')
             self.text.configure(state=ctk.DISABLED)
             # Autoscroll to the bottom
             self.text.yview(ctk.END)
@@ -444,14 +445,14 @@ class ImportFrame(ctk.CTkFrame):
                                                          command=self.clear_selected_files)
         self.clear_selected_files_button.place(relx=0.86, rely=0.47, relwidth=0.27, relheight=0.05, anchor='center')
         self.selected_files_frame = ctk.CTkScrollableFrame(master=self)
-        self.selected_files_frame.place(relx=0.5, rely=0.6, relwidth=0.9, relheight=0.2, anchor='center')
+        self.selected_files_frame.place(relx=0.5, rely=0.6, relwidth=1, relheight=0.2, anchor='center')
         self.imported_files_label = ctk.CTkLabel(master=self, text='Imported', wraplength=225,
                                                  text_color='#34eb43',
                                                  font=ctk.CTkFont(family='Helvetica', weight='bold', size=16),
                                                  justify='left')
         self.imported_files_label.place(relx=0.5, rely=0.75, relwidth=0.64, relheight=0.05, anchor='center')
         self.imported_files_frame = ctk.CTkScrollableFrame(master=self)
-        self.imported_files_frame.place(relx=0.5, rely=0.88, relwidth=0.9, relheight=0.2, anchor='center')
+        self.imported_files_frame.place(relx=0.5, rely=0.88, relwidth=1, relheight=0.2, anchor='center')
 
         self.check_for_previously_imported_files()
 
@@ -592,9 +593,10 @@ class ImportFrame(ctk.CTkFrame):
                 text_color = '#34abeb'
             else:
                 text_color = '#34eb43'
-            label = ctk.CTkLabel(master=frame, text=filename, wraplength=180, text_color=text_color,
+            label = ctk.CTkLabel(master=frame, text=filename, wraplength=200, text_color=text_color, anchor='w',
+                                 width=200,
                                  font=ctk.CTkFont(family='Helvetica', weight='bold', size=12), justify='left')
-            label.pack(side=ctk.TOP)
+            label.pack(side=ctk.TOP, pady=5)
 
     def clear_selected_files(self):
         self.selected_files = []
@@ -751,7 +753,7 @@ class LogFrame(ctk.CTkFrame):
                                            fg_color='transparent', text_color='yellow', font=self.text_font,
                                            justify='left', wraplength=225)
         self.log_textbox = ctk.CTkTextbox(master=self, font=self.text_font, wrap='word', state=ctk.DISABLED)
-        self.log_relevant_chunks_var = ctk.StringVar(value="no_log_chunks")
+        self.log_relevant_chunks_var = ctk.StringVar(value="log_chunks")
         self.log_relevant_chunks_check = ctk.CTkCheckBox(self, text="Show relevant chunks",
                                                          variable=self.log_relevant_chunks_var, onvalue='log_chunks',
                                                          offvalue='no_log_chunks')
@@ -768,7 +770,7 @@ class LogFrame(ctk.CTkFrame):
             self.change_language("bulgarian")
 
         text_handler = TextHandler(self.log_textbox)
-        logging.basicConfig(filename='rag_log.log', filemode='w', level=logging.INFO,
+        logging.basicConfig(filename='rag_log.log', filemode='a', level=logging.INFO,
                             format='%(asctime)s - %(levelname)s - %(message)s')
 
         logger = logging.getLogger()

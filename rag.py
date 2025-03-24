@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+import warnings
 import comtypes.client
 import fitz
 import pandas as pd
@@ -22,6 +23,7 @@ import spacy
 from spacy.lang.bg import Bulgarian
 from docx2pdf import convert
 from FlagEmbedding import BGEM3FlagModel
+from sentence_transformers import CrossEncoder
 
 import webbrowser
 from huggingface_hub import hf_hub_download
@@ -36,6 +38,7 @@ from nuclia_eval import REMi
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 os.environ['HF_HUB_DISABLE_SYMLINKS_WARNING'] = '0'
 pd.set_option('display.max_columns', None)
+warnings.filterwarnings("ignore", message="flash_attn is not installed. Using PyTorch native attention implementation.")
 
 
 class Rag:
@@ -58,6 +61,7 @@ class Rag:
         self.nlp = self.nlp_bg
 
         self.embedding_model = None
+        self.reranking_model = None
 
         self.stopwords = spacy.lang.bg.stop_words.STOP_WORDS
         self.min_token_length = 20
@@ -344,27 +348,65 @@ class Rag:
             self.embedding_model = BGEM3FlagModel('BAAI/bge-m3', use_fp16=True, device=self.device)
 
         except Exception as e:
-            logging.info(f"EXCEPTION: {e}")
-            print(f"EXCEPTION: {e}")
+            logging.exception(f"ERROR: {e}", stack_info=True)
+            print(f"ERROR: {e}")
             if self.menu_language == "bulgarian":
                 logging.info("ПРОБЛЕМ със зареждането на embedding модел (BAAI/bge-m3)! Системата НЯМА да работи "
                              "правилно! Ако за първи път използвате системата, проверете интернет връзката си. Тя е "
                              "необходима, за да се изтегли embedding модела. Оправете интернет връзката си и "
                              "рестартирайте приложението. Ако това не помогне, инсталирайте наново приложението.")
             else:
-                logging.info("PROBLEM with the loading of the LLM! The system will NOT work properly! If you use the "
-                             "system for the first time, check your internet connection. It is needed for the download "
-                             "of the LLM. Sort out your internet connection and restart the app. If this does not "
-                             "help, then reinstall the app.")
-            print("PROBLEM with the loading of the LLM! The system will NOT work properly! If you use the "
-                  "system for the first time, check your internet connection. It is needed for the download "
-                  "of the LLM. Sort out your internet connection and restart the app. If this does not "
+                logging.info("PROBLEM with the loading of the embedding model (BAAI/bge-m3)! The system will NOT work "
+                             "properly! If you use the system for the first time, check your internet connection. "
+                             "It is needed for the download of the LLM. Sort out your internet connection and restart "
+                             "the app. If this does not help, then reinstall the app.")
+            print("PROBLEM with the loading of the embedding model (BAAI/bge-m3)! The system will NOT work properly! "
+                  "If you use the system for the first time, check your internet connection. It is needed for the "
+                  "download of the LLM. Sort out your internet connection and restart the app. If this does not "
                   "help, then reinstall the app.")
         else:
             if self.menu_language == "bulgarian":
                 logging.info("Embedding модел (BAAI/bge-m3) беше зареден успешно.")
             else:
                 logging.info("Embedding model (BAAI/bge-m3) was successfully loaded.")
+
+    def load_reranking_model(self):
+        if self.menu_language == "bulgarian":
+            logging.info(f"Зареждане на реранкиращ (reranking) модел (jinaai/jina-reranker-v2-base-multilingual) на "
+                         f"{self.device}...")
+        else:
+            logging.info(f"Loading reranking model (jinaai/jina-reranker-v2-base-multilingual) on {self.device}...")
+        try:
+            self.reranking_model = CrossEncoder(
+                "jinaai/jina-reranker-v2-base-multilingual",
+                device=self.device,
+                automodel_args={"torch_dtype": "auto"},
+                trust_remote_code=True,
+            )
+        except Exception as e:
+            logging.exception(f"ERROR: {e}", stack_info=True)
+            print(f"ERROR: {e}")
+            if self.menu_language == "bulgarian":
+                logging.info("ПРОБЛЕМ със зареждането на реранкиращ (reranking) модел "
+                             "(jina-reranker-v2-base-multilingual)! Системата НЯМА да работи правилно! "
+                             "Ако за първи път използвате системата, проверете интернет връзката си. Тя е "
+                             "необходима, за да се изтегли реранкиращият модел. Оправете интернет връзката си и "
+                             "рестартирайте приложението. Ако това не помогне, инсталирайте наново приложението.")
+            else:
+                logging.info("PROBLEM with the loading of the reranking model (jina-reranker-v2-base-multilingual)! "
+                             "The system will NOT work properly! If you use the system for the first time, check your "
+                             "internet connection. It is needed for the download of the LLM. Sort out your internet "
+                             "connection and restart the app. If this does not help, then reinstall the app.")
+            print("PROBLEM with the loading of the reranking model (jina-reranker-v2-base-multilingual)! "
+                  "The system will NOT work properly! "
+                  "If you use the system for the first time, check your internet connection. It is needed for the "
+                  "download of the LLM. Sort out your internet connection and restart the app. If this does not "
+                  "help, then reinstall the app.")
+        else:
+            if self.menu_language == "bulgarian":
+                logging.info("Реранкиращият модел (jinaai/jina-reranker-v2-base-multilingual) беше зареден успешно.")
+            else:
+                logging.info("Reranking model (jinaai/jina-reranker-v2-base-multilingual) was successfully loaded.")
 
     def read_evaluation_df(self):
         if os.path.exists(self.evaluation_df_store_pickle_filename):
@@ -716,8 +758,8 @@ class Rag:
                 united_embeddings = torch.cat((united_embeddings, file_embeddings))
                 uploaded_filenames.append(os.path.basename(filename))
             except Exception as e:
-                logging.info(f"EXCEPTION: {e}")
-                print(f"EXCEPTION: {e}")
+                logging.exception(f"ERROR: {e}", stack_info=True)
+                print(f"ERROR: {e}")
                 if self.menu_language == "bulgarian":
                     logging.info(
                         f"Има проблем с файла '{filename}', който качвате! Вероятно НЕ може да бъде прочетен.")
@@ -784,8 +826,8 @@ class Rag:
             self.user_uploaded_faiss_index = read_index(self.uploaded_files_faiss_vector_db_filename)
 
         except Exception as e:
-            logging.info(f"EXCEPTION: {e}")
-            print(f"EXCEPTION: {e}")
+            logging.exception(f"ERROR: {e}", stack_info=True)
+            print(f"ERROR: {e}")
             if self.menu_language == "bulgarian":
                 logging.info("ПРОБЛЕМ с прочитането на базата данни от качените файлове. Системата може да НЕ "
                              "функционира правилно с тази опция.")
@@ -823,8 +865,8 @@ class Rag:
                                   faiss_store_filename=self.focus_news_faiss_store_filename)
 
         except Exception as e:
-            logging.info(f"EXCEPTION: {e}")
-            print(f"EXCEPTION: {e}")
+            logging.exception(f"ERROR: {e}", stack_info=True)
+            print(f"ERROR: {e}")
             if self.menu_language == "bulgarian":
                 logging.info("ГРЕШКА! ПРОБЛЕМ с прочитането на focus news json файловете!")
             else:
@@ -1185,8 +1227,8 @@ class Rag:
             self.db_chunks_and_embeddings, self.index_faiss_db, self.db_embeddings = self.read_dataset_files()
 
         except Exception as e:
-            logging.info(f"EXCEPTION: {e}")
-            print(f"EXCEPTION: {e}")
+            logging.exception(f"ERROR: {e}", stack_info=True)
+            print(f"ERROR: {e}")
             if self.menu_language == "bulgarian":
                 logging.info("Проблем с четенето на базата данни! Системата може да не функционира правилно!")
             else:
@@ -1306,8 +1348,8 @@ class Rag:
             self.llm.verbose = False
 
         except Exception as e:
-            print(f"EXCEPTION: {e}")
-            logging.info(f"EXCEPTION: {e}")
+            print(f"ERROR: {e}")
+            logging.exception(f"ERROR: {e}", stack_info=True)
             if self.menu_language == "bulgarian":
                 logging.info("ПРОБЛЕМ със зареждането на LLM! Системата НЯМА да работи правилно! Ако за първи път "
                              "използвате системата, проверете интернет връзката си. Тя е необходима, за да се "
@@ -1371,8 +1413,12 @@ class Rag:
         return prompt
 
     def reciprocal_rank_fusion(self, query, translate_query=False, k=60, topn_articles=3, use_uploaded_files_db=False):
-        if len(self.chunks_and_embeddings) >= 10:
-            topn_relevant_articles = 10
+        if self.use_default_db and self.use_uploaded_db:
+            rrf_topn_threshold = 25
+        else:
+            rrf_topn_threshold = 50
+        if len(self.chunks_and_embeddings) >= rrf_topn_threshold:
+            topn_relevant_articles = rrf_topn_threshold
         else:
             topn_relevant_articles = len(self.chunks_and_embeddings)
 
@@ -1605,11 +1651,11 @@ class Rag:
         rank_fusion_indices = []
 
         for q in queries_list:
-            q_reranked_indices, _ = self.reciprocal_rank_fusion(q, k=k, translate_query=translate_query,
-                                                                topn_articles=topn_articles,
-                                                                use_uploaded_files_db=use_uploaded_files_db)
+            q_ranked_indices, _ = self.reciprocal_rank_fusion(q, k=k, translate_query=translate_query,
+                                                              topn_articles=topn_articles,
+                                                              use_uploaded_files_db=use_uploaded_files_db)
 
-            rank_fusion_indices.append(q_reranked_indices)
+            rank_fusion_indices.append(q_ranked_indices)
         return rank_fusion_indices
 
     def ask_query(self, query, use_rag_fusion=False, use_hyde=False, use_generated_subqueries=False,
@@ -1631,14 +1677,20 @@ class Rag:
                              "uploaded files are in one language only and it is the same language on which your query "
                              "is written, then turn off this option in the menu.")
 
-        query_reranked_indices, _ = self.reciprocal_rank_fusion(query, translate_query=translate_query,
-                                                                topn_articles=topn_articles,
-                                                                use_uploaded_files_db=use_uploaded_files_db)
-        rank_fusion_indices = [query_reranked_indices]
+        if self.use_default_db and self.use_uploaded_db:
+            rrf_topn_threshold = 10
+        else:
+            rrf_topn_threshold = 20
+
+        query_ranked_indices, query_fused_scores = self.reciprocal_rank_fusion(query, translate_query=translate_query,
+                                                                               topn_articles=rrf_topn_threshold,
+                                                                               use_uploaded_files_db=
+                                                                               use_uploaded_files_db)
+        rank_fusion_indices = [query_ranked_indices]
 
         if use_rag_fusion:
             rank_fusion_indices += self.rag_fusion(query, n_similar_queries=4, print_queries=True, k=60,
-                                                   translate_query=translate_query, topn_articles=topn_articles,
+                                                   translate_query=translate_query, topn_articles=rrf_topn_threshold,
                                                    use_uploaded_files_db=use_uploaded_files_db)
 
         if use_hyde:
@@ -1655,10 +1707,10 @@ class Rag:
                                  "used to improve the finding of relevant resources for the query:")
                 print(llm_answer)
                 logging.info(llm_answer)
-            hyde_reranked_indices, _ = self.reciprocal_rank_fusion(llm_answer, translate_query=translate_query,
-                                                                   topn_articles=topn_articles,
-                                                                   use_uploaded_files_db=use_uploaded_files_db)
-            rank_fusion_indices.append(hyde_reranked_indices)
+            hyde_ranked_indices, _ = self.reciprocal_rank_fusion(llm_answer, translate_query=translate_query,
+                                                                 topn_articles=rrf_topn_threshold,
+                                                                 use_uploaded_files_db=use_uploaded_files_db)
+            rank_fusion_indices.append(hyde_ranked_indices)
 
         if use_generated_subqueries:
             subqueries = self.generate_subqueries(query)
@@ -1673,23 +1725,40 @@ class Rag:
 
             generated_subqueries_list = [line[3:] for line in subqueries.splitlines()]
             for sub_query in generated_subqueries_list:
-                q_reranked_indices, _ = self.reciprocal_rank_fusion(sub_query, translate_query=translate_query,
-                                                                    topn_articles=topn_articles,
-                                                                    use_uploaded_files_db=use_uploaded_files_db)
-                rank_fusion_indices.append(q_reranked_indices)
+                q_ranked_indices, _ = self.reciprocal_rank_fusion(sub_query, translate_query=translate_query,
+                                                                  topn_articles=rrf_topn_threshold,
+                                                                  use_uploaded_files_db=use_uploaded_files_db)
+                rank_fusion_indices.append(q_ranked_indices)
 
-        final_reranked_indices, final_fused_scores = self.reciprocal_rank_fusion_raw(rank_fusion_indices,
-                                                                                     topn_articles=topn_articles)
-        relevant_chunks_and_embeddings = [self.chunks_and_embeddings[i] for i in final_reranked_indices]
+        if len(rank_fusion_indices) > 1:
+            final_ranked_indices, final_fused_scores = self.reciprocal_rank_fusion_raw(rank_fusion_indices,
+                                                                                       topn_articles=rrf_topn_threshold)
+        else:
+            final_ranked_indices = query_ranked_indices
+            final_fused_scores = query_fused_scores
+
+        relevant_chunks_and_embeddings = [self.chunks_and_embeddings[i] for i in final_ranked_indices]
+        relevant_chunks = [element['chunk_text'] for element in relevant_chunks_and_embeddings]
+
+        reranked_chunks = self.reranking_model.rank(query, relevant_chunks, return_documents=True,
+                                                    convert_to_tensor=True)
+        reranked_elements = []
+        reranking_scores = []
+        for ranking in reranked_chunks:
+            reranked_elements.append(relevant_chunks_and_embeddings[ranking['corpus_id']])
+            reranking_scores.append(ranking['score'])
+
         relevant_context_elements = []
 
-        for i, element in enumerate(relevant_chunks_and_embeddings):
-            element['score'] = final_fused_scores[i]
+        for i, element in enumerate(reranked_elements):
+            element['score'] = reranking_scores[i]
             if use_relevant_resource_llm_check:
                 if self.is_context_passage_relevant_to_query(query=query, context_passage=element['chunk_text']):
                     relevant_context_elements.append(element)
             else:
                 relevant_context_elements.append(element)
+            if len(relevant_context_elements) == topn_articles:
+                break
 
         if not relevant_context_elements:
             relevant_context_elements.append(relevant_chunks_and_embeddings[0])
@@ -2218,14 +2287,37 @@ class Rag:
                      разговора до момента. Не отговаряй на заявката, а единствено я модифицирай при нужда.
                      В отговора си задължително не включвай следния текст: "При нужда, модифицирай тази заявка:". 
                      Целта е върнатата от теб заявка да може да се подаде на RAG (Retrieval
-                     Generated Augmentation) система, т.е. в заявката да се съдържа предметът на питането.
+                     Generated Augmentation) система, т.е. в заявката трябва да се съдържа достатъчно подробен контекст.
+                     Обогати заявката с достатъчен контекст от разговора до момента, ако има нужда.
                      Ако прецениш, че заявката е самодостатъчна (разбира се за какво конкретно се пита),
                      не променяй изобщо заявката, а я върни абсолютно същата.
+                     
+                     # Пример 1
                      Пример за заявка, имаща нужда от модифициране: "При нужда, модифицирай тази заявка: Кога е 
                      спечелил първия си трофей?" - Не се разбира за кого се пита, има нужда от преглед на 
                      разговора до момента, за да се разбере.
                      Тогава трябва да се допълни въпроса с името на човека, за когото се пита на база разговора
                      до момента. (Примерно отговаряш така: "Кога Рафаел Надал е спечелил първия си трофей?")
+                     
+                     # Пример 2
+                     Пример за заявка, имаща нужда от модифициране: "При нужда, модифицирай тази заявка: Кога е 
+                     написана книгата?" - Не се разбира за коя книга се пита, има нужда от преглед на 
+                     разговора до момента, за да се разбере.
+                     Тогава трябва да се допълни въпроса със заглавието на книгата, за която се пита на база разговора
+                     до момента. (Примерно отговаряш така: "Кога е написана книгата "Под игото"?")
+                     
+                     # Пример 3
+                     Пример за заявка, имаща нужда от модифициране: "При нужда, модифицирай тази заявка: 'Кой се 
+                     занимава с въвеждането на тези мерки и с мониторинга за тяхното спазване в България?' - 
+                     Не се разбира кои са тези мерки има нужда от преглед на 
+                     разговора до момента, за да се разбере.
+                     Тогава трябва да се допълни въпроса със заглавието на книгата, за която се пита на база разговора
+                     до момента. (Примерно, ако в разговора се говори за мерки за намаляване на замърсяването на 
+                     въздуха в градовете, отговаряш така: 
+                     "Кой се занимава с въвеждането на тези мерки за намаляване на замърсяването на въздуха в 
+                     градовете и с мониторинга за тяхното спазване в България?")
+                     
+                     # Пример 4
                      Пример за заявка, която е самодостатъчна: "При нужда, модифицирай тази заявка: Кога България
                      е основана като държава?" -
                      В този случай заявката е напълно изчерпателна, разбира се изцяло за какво се пита, връща се

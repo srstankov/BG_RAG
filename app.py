@@ -14,6 +14,7 @@ class App(ctk.CTk):
         self.minsize(1000, 600)
         ctk.set_appearance_mode('dark')
         self.title('BG RAG')
+        self.iconbitmap('icon.ico')
         self.rowconfigure(0, weight=4, uniform='b')
         self.rowconfigure(1, weight=1, uniform='b')
         self.columnconfigure(0, weight=1, uniform='a')
@@ -29,12 +30,19 @@ class App(ctk.CTk):
         self.protocol('WM_DELETE_WINDOW', self.close_window)
 
         if self.menu.options_frame.menu_language_var.get() == "bulgarian":
+            logging.info("Стартиране на приложението.")
             logging.info("BG RAG приложението зарежда LLM и базите данни.")
             logging.info("Повечето функции на приложението ще бъдат НЕДОСТЪПНИ, докато не завърши зареждането.")
+            logging.info("Ако това е първото стартиране на приложението след инсталацията, то ще трябва добра интернет "
+                         "връзка и значително време, за да се изтеглят моделите, използвани в системата.")
             logging.info("Моля, изчакайте.")
         else:
+            logging.info("Starting the app.")
             logging.info("BG RAG app is loading the LLM and the datasets.")
             logging.info("Most functions of the app will be DISABLED until the loading is completed.")
+            logging.info("If this is the first launching of the app after the installation, then a good internet "
+                         "connection and significant time will be needed in order for the models used in the system to "
+                         "be downloaded.")
             logging.info("Please wait.")
 
         self.update_idletasks()
@@ -64,6 +72,7 @@ class App(ctk.CTk):
     def load_rag_databases(self):
         # self.rag.update_both_databases() // when the default database has been updated to a newer version uncomment
         self.rag.load_embedding_model()
+        self.rag.load_reranking_model()
         self.rag.load_llm()
         self.rag.read_database()
         if os.path.exists('imported_files.txt'):
@@ -102,6 +111,11 @@ class App(ctk.CTk):
                              f"{self.rag.evaluation_df_store_pickle_filename}")
             else:
                 logging.info(f"Evaluation dataset saved successfully to {self.rag.evaluation_df_store_pickle_filename}")
+
+        if self.menu.options_frame.menu_language_var.get() == "bulgarian":
+            logging.info("Затваряне на приложението.\n\n\n")
+        else:
+            logging.info("Closing the app.\n\n\n")
         self.after(1000, self.destroy)
 
     def clear_chat(self, *args):
@@ -207,8 +221,8 @@ class App(ctk.CTk):
                                                  topn_articles=topn_articles)
 
         except Exception as e:
-            print(f"EXCEPTION: {e}")
-            logging.info(f"EXCEPTION: {e}")
+            print(f"ERROR: {e}")
+            logging.exception(f"ERROR: {e}", stack_info=True)
             if self.menu.options_frame.menu_language_var.get() == "bulgarian":
                 logging.info("ГРЕШКА! Генерирането на отговор на заявката (функция ask_system от класа Rag) "
                              "връща ИЗКЛЮЧЕНИЕ (EXCEPTION)!")
@@ -297,7 +311,7 @@ class App(ctk.CTk):
         self.menu.import_frame.time_to_stop_import_animation = True
 
     def delete_files(self, *args):
-        self.menu.options_frame.uploaded_db_var.set('default_db')
+        self.menu.options_frame.uploaded_db_var.set('no_uploaded_db')
         if self.menu.options_frame.just_llm_var.get() == 'no_just_llm':
             self.menu.options_frame.default_db_var.set('default_db')
         self.menu.options_frame.uploaded_db_check.configure(state=ctk.DISABLED)
@@ -330,9 +344,9 @@ class App(ctk.CTk):
             save_file.close()
         except Exception as e:
             self.menu.save_frame.successful_save = False
-            print(f"EXCEPTION: {e}")
+            print(f"ERROR: {e}")
             print("ERROR! Chat conversation could not be saved!")
-            logging.info(f"EXCEPTION: {e}")
+            logging.exception(f"ERROR: {e}", stack_info=True)
             if self.menu.options_frame.menu_language_var.get() == "bulgarian":
                 logging.info("ГРЕШКА! Чат разговорът НЕ беше запазен!")
             else:
