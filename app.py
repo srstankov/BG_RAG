@@ -23,7 +23,7 @@ class App(ctk.CTk):
         self.menu = Menu(self)
         self.chat_input = ChatInput(self)
         self.chat_output = ChatOutput(self)
-        self.bind_all("<Key>", self._on_key_release, "+")
+        self.bind_all("<Key>", self.on_key_release, "+")
         self.user_input = ''
         self.rag_response = ctk.StringVar(value='')
         self.relevant_resources = []
@@ -355,7 +355,8 @@ class App(ctk.CTk):
             self.menu.save_frame.successful_save = True
 
     @staticmethod
-    def _on_key_release(event):
+    # https://stackoverflow.com/a/47496024
+    def on_key_release(event):
         ctrl = (event.state & 0x4) != 0
 
         if event.keycode == 90 and ctrl and event.keysym.lower() != "z":

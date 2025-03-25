@@ -10,6 +10,7 @@ from rag import resource_path
 
 
 class TextHandler(logging.Handler):
+    # https://stackoverflow.com/a/41959785
     # This class allows you to log to a Tkinter Text or ScrolledText widget
     # Adapted from Moshe Kaplan: https://gist.github.com/moshekaplan/c425f861de7bbf28ef06
 
