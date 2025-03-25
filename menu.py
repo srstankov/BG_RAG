@@ -6,6 +6,7 @@ import os
 from tkinter import messagebox
 import logging
 from pathlib import Path
+from rag import resource_path
 
 
 class TextHandler(logging.Handler):
@@ -39,7 +40,7 @@ class Menu(ctk.CTkFrame):
         self.grid(row=0, column=0, rowspan=2, sticky='nsew')
 
         self.menu = ctk.CTkTabview(master=self)
-        options_config_json = open('options_config.json', 'r')
+        options_config_json = open(resource_path('options_config.json'), 'r')
         options_config = json.load(options_config_json)
         options_config_json.close()
         if options_config['menu_language_var'] == "english":
@@ -71,8 +72,8 @@ class Menu(ctk.CTkFrame):
             self.help_frame = HelpFrame(self.menu.tab('Помощ'))
 
         menu_icon_white_ctk = ctk.CTkImage(
-            light_image=Image.open('images/menu_icon_black.png'),
-            dark_image=Image.open('images/menu_icon_white.png'),
+            light_image=Image.open(resource_path('images') + os.sep + 'menu_icon_black.png'),
+            dark_image=Image.open(resource_path('images') + os.sep + 'menu_icon_white.png'),
             size=(40, 40)
         )
         self.menu_button = ctk.CTkButton(self, text='', image=menu_icon_white_ctk, command=self.show,
@@ -137,7 +138,7 @@ class OptionsFrame(ctk.CTkFrame):
                                                  onvalue='uploaded_db', offvalue='no_uploaded_db',
                                                  command=self.database_click)
 
-        if not os.path.exists('imported_files.txt'):
+        if not os.path.exists(resource_path('imported_files.txt')):
             self.uploaded_db_check.configure(state=ctk.DISABLED)
 
         self.display_resources_var = ctk.StringVar(value='resources')
@@ -221,14 +222,14 @@ class OptionsFrame(ctk.CTkFrame):
         self.english_language_check.place(relx=0.52, rely=0.93, relwidth=0.48, relheight=0.06, anchor='nw')
 
     def read_options_config(self, just_llm_unchecked=False):
-        options_config_json = open('options_config.json', 'r')
+        options_config_json = open(resource_path('options_config.json'), 'r')
         options_config = json.load(options_config_json)
         options_config_json.close()
         if just_llm_unchecked:
             self.rag_fusion_var.set(options_config['rag_fusion_var'])
             self.hyde_var.set(options_config['hyde_var'])
             self.subqueries_var.set(options_config['subqueries_var'])
-            if os.path.exists('imported_files.txt'):
+            if os.path.exists(resource_path('imported_files.txt')):
                 self.default_db_var.set(options_config['default_db_var'])
                 self.uploaded_db_var.set(options_config['uploaded_db_var'])
             else:
@@ -242,12 +243,12 @@ class OptionsFrame(ctk.CTkFrame):
             self.relevant_resource_llm_check_var.set(options_config['relevant_resource_llm_check_var'])
 
         elif options_config['just_llm_var'] == 'no_just_llm':
-            if os.path.exists('imported_files.txt'):
+            if os.path.exists(resource_path('imported_files.txt')):
                 self.uploaded_db_check.configure(state=ctk.NORMAL)
             self.rag_fusion_var.set(options_config['rag_fusion_var'])
             self.hyde_var.set(options_config['hyde_var'])
             self.subqueries_var.set(options_config['subqueries_var'])
-            if os.path.exists('imported_files.txt'):
+            if os.path.exists(resource_path('imported_files.txt')):
                 self.default_db_var.set(options_config['default_db_var'])
                 self.uploaded_db_var.set(options_config['uploaded_db_var'])
             else:
@@ -294,7 +295,7 @@ class OptionsFrame(ctk.CTkFrame):
                 self.change_language("bulgarian")
 
     def update_options_config(self, on_exit=False):
-        options_config_json = open('options_config.json', 'r+')
+        options_config_json = open(resource_path('options_config.json'), 'r+')
         options_config = json.load(options_config_json)
         if not on_exit or self.just_llm_var.get() == 'no_just_llm':
             options_config['rag_fusion_var'] = self.rag_fusion_var.get()
@@ -456,7 +457,7 @@ class ImportFrame(ctk.CTkFrame):
 
         self.check_for_previously_imported_files()
 
-        options_config_json = open('options_config.json', 'r')
+        options_config_json = open(resource_path('options_config.json'), 'r')
         options_config = json.load(options_config_json)
         options_config_json.close()
         self.menu_language = options_config["menu_language_var"]
@@ -464,8 +465,8 @@ class ImportFrame(ctk.CTkFrame):
             self.change_language("bulgarian")
 
     def check_for_previously_imported_files(self):
-        if os.path.exists('imported_files.txt'):
-            imported_files_txt = open('imported_files.txt', 'r', encoding="utf-8")
+        if os.path.exists(resource_path('imported_files.txt')):
+            imported_files_txt = open(resource_path('imported_files.txt'), 'r', encoding="utf-8")
             self.imported_filenames = imported_files_txt.read().splitlines()
             self.selected_filenames = self.imported_filenames
             self.add_files_labels(self.imported_files_frame)
@@ -689,7 +690,7 @@ class SaveFrame(ctk.CTkFrame):
         self.save_info_label.place(relx=0.5, rely=0.86, relwidth=0.98, relheight=0.06, anchor='center')
         self.successful_save = True
 
-        options_config_json = open('options_config.json', 'r')
+        options_config_json = open(resource_path('options_config.json'), 'r')
         options_config = json.load(options_config_json)
         options_config_json.close()
         self.menu_language = options_config["menu_language_var"]
@@ -762,7 +763,7 @@ class LogFrame(ctk.CTkFrame):
         self.log_relevant_chunks_check.place(relx=0.04, rely=0.07, relwidth=0.96, relheight=0.06, anchor='nw')
         self.log_textbox.place(relx=0, rely=0.14, relwidth=1, relheight=0.85, anchor='nw')
 
-        options_config_json = open('options_config.json', 'r')
+        options_config_json = open(resource_path('options_config.json'), 'r')
         options_config = json.load(options_config_json)
         options_config_json.close()
         self.menu_language = options_config["menu_language_var"]
@@ -770,7 +771,7 @@ class LogFrame(ctk.CTkFrame):
             self.change_language("bulgarian")
 
         text_handler = TextHandler(self.log_textbox)
-        logging.basicConfig(filename='rag_log.log', filemode='a', level=logging.INFO,
+        logging.basicConfig(filename=resource_path('rag_log.log'), filemode='a', level=logging.INFO,
                             format='%(asctime)s - %(levelname)s - %(message)s')
 
         logger = logging.getLogger()
@@ -804,7 +805,7 @@ class HelpFrame(ctk.CTkFrame):
         self.help_textbox = ctk.CTkTextbox(master=self, font=self.text_font, wrap='word', state=ctk.DISABLED)
         self.help_textbox.place(relx=0, rely=0, relwidth=1, relheight=1, anchor='nw')
 
-        options_config_json = open('options_config.json', 'r')
+        options_config_json = open(resource_path('options_config.json'), 'r')
         options_config = json.load(options_config_json)
         options_config_json.close()
         self.menu_language = options_config["menu_language_var"]

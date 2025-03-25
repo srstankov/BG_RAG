@@ -41,13 +41,25 @@ pd.set_option('display.max_columns', None)
 warnings.filterwarnings("ignore", message="flash_attn is not installed. Using PyTorch native attention implementation.")
 
 
+# https://stackoverflow.com/a/31966932
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+
 class Rag:
     def __init__(self):
         # change self.evaluation_mode to True if you want your conversations to be saved in
         # 'evaluation_df.pkl' file so that you can evaluate later the RAG performance (False if you don't want this)
         self.evaluation_mode = False
 
-        options_config_json = open('options_config.json', 'r')
+        options_config_json = open(resource_path('options_config.json'), 'r')
         options_config = json.load(options_config_json)
         options_config_json.close()
         self.menu_language = options_config["menu_language_var"]
@@ -72,19 +84,23 @@ class Rag:
         self.use_default_db = True
         self.use_uploaded_db = False
 
-        self.bg_wiki_pickle_filename = 'bg_wiki_df.pkl'
-        self.bg_wiki_chunks_df_filtered_pickle_filename = "bg_wiki_chunks_filtered_df.pkl"
-        self.bg_wiki_chunks_and_embeddings_dict_pickle_filename = "bg_wiki_chunks_and_embeddings_dict.pkl"
-        self.bg_wiki_chunks_and_embeddings_csv_filename = 'bg_wiki_chunks_and_embeddings.csv'
-        self.uploaded_files_chunk_dict_filename = "uploaded_files_chunk_dict.pkl"
-        self.uploaded_files_faiss_vector_db_filename = "uploaded_files_faiss_vector_db.index"
-        self.focus_news_chunk_dict_filename = "focus_news_chunk_dict.pkl"
-        self.chunk_dict_filename = "db_chunks_and_embeddings.pkl"
-        self.faiss_store_filename = "faiss_vector_db.index"
-        self.bg_wiki_faiss_store_filename = "bg_wiki_faiss_vector_db.index"
-        self.focus_news_faiss_store_filename = "focus_news_faiss_vector_db.index"
-        self.db_bm25s_store_filename = "db_bm25s_chunks_index"
-        self.uploaded_files_bm25s_store_filename = "uploaded_files_bm25s_chunks_index"
+        self.bg_wiki_pickle_filename = resource_path('bg_wiki_df.pkl')
+        self.bg_wiki_chunks_df_filtered_pickle_filename = resource_path("bg_wiki_chunks_filtered_df.pkl")
+        self.bg_wiki_chunks_and_embeddings_dict_pickle_filename = resource_path(
+                                                                               "bg_wiki_chunks_and_embeddings_dict.pkl")
+        self.bg_wiki_chunks_and_embeddings_csv_filename = resource_path('bg_wiki_chunks_and_embeddings.csv')
+        self.bg_wiki_faiss_store_filename = resource_path("bg_wiki_faiss_vector_db.index")
+
+        self.uploaded_files_chunk_dict_filename = resource_path("uploaded_files_chunk_dict.pkl")
+        self.uploaded_files_faiss_vector_db_filename = resource_path("uploaded_files_faiss_vector_db.index")
+        self.uploaded_files_bm25s_store_filename = resource_path("uploaded_files_bm25s_chunks_index")
+
+        self.focus_news_chunk_dict_filename = resource_path("focus_news_chunk_dict.pkl")
+        self.focus_news_faiss_store_filename = resource_path("focus_news_faiss_vector_db.index")
+
+        self.chunk_dict_filename = resource_path("db_chunks_and_embeddings.pkl")
+        self.faiss_store_filename = resource_path("faiss_vector_db.index")
+        self.db_bm25s_store_filename = resource_path("db_bm25s_chunks_index")
 
         self.bg_wiki_df = None
         self.bg_wiki_chunks = []
@@ -95,6 +111,7 @@ class Rag:
         self.bg_wiki_chunks_and_embeddings = None
         self.bg_wiki_embeddings = None
         self.bg_wiki_faiss_index = None
+
         self.focus_news_chunk_dict = None
         self.focus_news_faiss_index = None
         self.focus_news_embeddings = None
@@ -113,7 +130,7 @@ class Rag:
 
         self.evaluator = None
         self.evaluation_df = None
-        self.evaluation_df_store_pickle_filename = "evaluation_df.pkl"
+        self.evaluation_df_store_pickle_filename = resource_path("evaluation_df.pkl")
 
         self.history_str = ""
         self.chat_history = []
@@ -153,7 +170,14 @@ class Rag:
                 logging.info(f"GPU VRAM наличен: {self.gpu_memory_gb} GB")
             else:
                 logging.info(f"GPU VRAM available: {self.gpu_memory_gb} GB")
-            if self.gpu_memory_gb <= 7:
+
+            if self.gpu_memory_gb <= 2:
+                self.model_gguf_name = "INSAIT-Institute/BgGPT-Gemma-2-2.6B-IT-v1.0-GGUF"
+                self.model_file = "BgGPT-Gemma-2-2B-IT-v1.0.Q5_K_M.gguf"
+            elif self.gpu_memory_gb <= 4:
+                self.model_gguf_name = "INSAIT-Institute/BgGPT-Gemma-2-2.6B-IT-v1.0-GGUF"
+                self.model_file = "BgGPT-Gemma-2-2B-IT-v1.0.Q8_0.gguf"
+            elif self.gpu_memory_gb <= 7:
                 self.model_file = self.model_q4ks_file
             elif self.gpu_memory_gb <= 8:
                 self.model_file = self.model_q4km_file
@@ -161,12 +185,31 @@ class Rag:
                 self.model_file = self.model_q5ks_file
             elif self.gpu_memory_gb <= 10:
                 self.model_file = self.model_q5km_file
-            elif self.gpu_memory_gb <= 13:
+            elif self.gpu_memory_gb <= 15:
                 self.model_file = self.model_q6k_file
             elif self.gpu_memory_gb <= 20:
                 self.model_file = self.model_q8_file
+            elif self.gpu_memory_gb <= 21:
+                self.model_gguf_name = "INSAIT-Institute/BgGPT-Gemma-2-27B-IT-v1.0-GGUF"
+                self.model_file = "BgGPT-Gemma-2-27B-IT-v1.0.Q4_K_S.gguf"
+            elif self.gpu_memory_gb <= 23:
+                self.model_gguf_name = "INSAIT-Institute/BgGPT-Gemma-2-27B-IT-v1.0-GGUF"
+                self.model_file = "BgGPT-Gemma-2-27B-IT-v1.0.Q4_K_M.gguf"
+            elif self.gpu_memory_gb <= 24:
+                self.model_gguf_name = "INSAIT-Institute/BgGPT-Gemma-2-27B-IT-v1.0-GGUF"
+                self.model_file = "BgGPT-Gemma-2-27B-IT-v1.0.Q5_K_S.gguf"
+            elif self.gpu_memory_gb <= 27:
+                self.model_gguf_name = "INSAIT-Institute/BgGPT-Gemma-2-27B-IT-v1.0-GGUF"
+                self.model_file = "BgGPT-Gemma-2-27B-IT-v1.0.Q5_K_M.gguf"
+            elif self.gpu_memory_gb <= 35:
+                self.model_gguf_name = "INSAIT-Institute/BgGPT-Gemma-2-27B-IT-v1.0-GGUF"
+                self.model_file = "BgGPT-Gemma-2-27B-IT-v1.0.Q6_K.gguf"
+            elif self.gpu_memory_gb <= 63:
+                self.model_gguf_name = "INSAIT-Institute/BgGPT-Gemma-2-27B-IT-v1.0-GGUF"
+                self.model_file = "BgGPT-Gemma-2-27B-IT-v1.0.Q8_0.gguf"
             else:
-                self.model_file = self.model_f16_file
+                self.model_gguf_name = "INSAIT-Institute/BgGPT-Gemma-2-27B-IT-v1.0-GGUF"
+                self.model_file = "BgGPT-Gemma-2-27B-IT-v1.0.F16.gguf"
 
             if self.menu_language == "bulgarian":
                 logging.info("GPU (Cuda) беше открит. Моделът следователно ще бъде зареден на GPU за по-бърза скорост.")
@@ -187,20 +230,24 @@ class Rag:
                 logging.info(f"RAM памет открита: {self.ram_memory_gb} GB")
             else:
                 logging.info(f"RAM memory found: {self.ram_memory_gb} GB")
-            if self.ram_memory_gb <= 9:
-                self.model_file = self.model_q4ks_file
-            elif self.ram_memory_gb <= 10:
-                self.model_file = self.model_q4km_file
+
+            if self.ram_memory_gb <= 7:
+                self.model_gguf_name = "INSAIT-Institute/BgGPT-Gemma-2-2.6B-IT-v1.0-GGUF"
+                self.model_file = "BgGPT-Gemma-2-2B-IT-v1.0.Q5_K_M.gguf"
             elif self.ram_memory_gb <= 11:
-                self.model_file = self.model_q5ks_file
-            elif self.ram_memory_gb <= 12:
-                self.model_file = self.model_q5km_file
+                self.model_gguf_name = "INSAIT-Institute/BgGPT-Gemma-2-2.6B-IT-v1.0-GGUF"
+                self.model_file = "BgGPT-Gemma-2-2B-IT-v1.0.Q8_0.gguf"
             elif self.ram_memory_gb <= 14:
+                self.model_file = self.model_q4km_file
+            elif self.ram_memory_gb <= 19:
+                self.model_file = self.model_q5km_file
+            elif self.ram_memory_gb <= 29:
                 self.model_file = self.model_q6k_file
-            elif self.ram_memory_gb <= 22:
+            elif self.ram_memory_gb <= 39:
                 self.model_file = self.model_q8_file
             else:
                 self.model_file = self.model_f16_file
+
         print(f"LLM file chosen based on computer parameters: {self.model_file}")
         if self.menu_language == "bulgarian":
             logging.info(f"LLM файл, избран на база параметрите на компютъра: {self.model_file}")
@@ -284,8 +331,8 @@ class Rag:
         return index_faiss_user_files, file_embeddings
 
     @staticmethod
-    def read_dataset_files(chunk_dict_filename="db_chunks_and_embeddings.pkl",
-                           faiss_store_filename="faiss_vector_db.index"):
+    def read_dataset_files(chunk_dict_filename=resource_path("db_chunks_and_embeddings.pkl"),
+                           faiss_store_filename=resource_path("faiss_vector_db.index")):
         if not os.path.exists(chunk_dict_filename):
             return None, None, None
         with open(chunk_dict_filename, 'rb') as f:
@@ -722,8 +769,8 @@ class Rag:
         return []
 
     def upload_files(self, user_filenames, united_chunks_dictionary=None, index_faiss_user_files=None,
-                     united_embeddings=None, chunk_dict_filename="uploaded_files_chunk_dict.pkl",
-                     faiss_store_filename="uploaded_files_faiss_vector_db.index"):
+                     united_embeddings=None, chunk_dict_filename=resource_path("uploaded_files_chunk_dict.pkl"),
+                     faiss_store_filename=resource_path("uploaded_files_faiss_vector_db.index")):
         if self.menu_language == "bulgarian":
             logging.info("Качване на файловете...")
         else:
@@ -851,7 +898,7 @@ class Rag:
         # before adding new focus news json files remove "focus_news_chunk_dict.pkl" and
         # "focus_news_faiss_vector_db.index" files for a completely new creation of the database or simply change which
         # new files should be read in the following lines, thus expanding the focus news database with the new files
-        focus_news_json_file_tmpl = 'focus_news/focus_news_articles_{}.json'
+        focus_news_json_file_tmpl = resource_path('focus_news' + os.sep + 'focus_news_articles_{}.json')
         focus_news_json_files_list = [focus_news_json_file_tmpl.format(f"0_{i}") for i in range(new_files, 0, -1)]
         focus_news_json_files_list += [focus_news_json_file_tmpl.format(i) for i in range(first_file_number,
                                                                                           last_file_number + 1)]
