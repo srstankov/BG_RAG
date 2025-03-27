@@ -1,7 +1,6 @@
 import logging
 import os
 import sys
-import warnings
 import comtypes.client
 import fitz
 import pandas as pd
@@ -38,18 +37,13 @@ from nuclia_eval import REMi
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 os.environ['HF_HUB_DISABLE_SYMLINKS_WARNING'] = '0'
 pd.set_option('display.max_columns', None)
-warnings.filterwarnings("ignore", message="flash_attn is not installed. Using PyTorch native attention implementation.")
 
 
-# https://stackoverflow.com/a/31966932
 def resource_path(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller """
     try:
-        # PyInstaller creates a temp folder and stores path in _MEIPASS
-        base_path = sys._MEIPASS
+        base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(".")))
     except Exception:
         base_path = os.path.abspath(".")
-
     return os.path.join(base_path, relative_path)
 
 
@@ -204,12 +198,9 @@ class Rag:
             elif self.gpu_memory_gb <= 35:
                 self.model_gguf_name = "INSAIT-Institute/BgGPT-Gemma-2-27B-IT-v1.0-GGUF"
                 self.model_file = "BgGPT-Gemma-2-27B-IT-v1.0.Q6_K.gguf"
-            elif self.gpu_memory_gb <= 63:
-                self.model_gguf_name = "INSAIT-Institute/BgGPT-Gemma-2-27B-IT-v1.0-GGUF"
-                self.model_file = "BgGPT-Gemma-2-27B-IT-v1.0.Q8_0.gguf"
             else:
                 self.model_gguf_name = "INSAIT-Institute/BgGPT-Gemma-2-27B-IT-v1.0-GGUF"
-                self.model_file = "BgGPT-Gemma-2-27B-IT-v1.0.F16.gguf"
+                self.model_file = "BgGPT-Gemma-2-27B-IT-v1.0.Q8_0.gguf"
 
             if self.menu_language == "bulgarian":
                 logging.info("GPU (Cuda) беше открит. Моделът следователно ще бъде зареден на GPU за по-бърза скорост.")
