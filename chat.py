@@ -27,7 +27,7 @@ class ChatInput(ctk.CTkFrame):
                                                font=self.clear_chat_button_text_font, command=self.clear_chat)
         self.clear_chat_button.place(relx=0.84, rely=0.9, relwidth=0.12, relheight=0.3, anchor='sw')
 
-        options_config_json = open(resource_path('options_config.json'), 'r')
+        options_config_json = open(resource_path('options_config.json', app_generated_file=True), 'r')
         options_config = json.load(options_config_json)
         options_config_json.close()
         if options_config["menu_language_var"] == "bulgarian":
@@ -65,7 +65,7 @@ class ChatOutput(ctk.CTkScrollableFrame):
                                               textvariable=self.dots_str,
                                               width=70, corner_radius=8, justify='center', wraplength=100)
 
-        options_config_json = open(resource_path('options_config.json'), 'r')
+        options_config_json = open(resource_path('options_config.json', app_generated_file=True), 'r')
         options_config = json.load(options_config_json)
         options_config_json.close()
         self.menu_language = options_config["menu_language_var"]

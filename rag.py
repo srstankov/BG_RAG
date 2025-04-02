@@ -39,9 +39,12 @@ os.environ['HF_HUB_DISABLE_SYMLINKS_WARNING'] = '0'
 pd.set_option('display.max_columns', None)
 
 
-def resource_path(relative_path):
+def resource_path(relative_path, app_generated_file=False):
+    if app_generated_file:
+        if sys.platform == 'win32':
+            return f"{os.getenv('LOCALAPPDATA') + os.sep}BG RAG{os.sep + relative_path}"
     try:
-        base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(".")))
+        base_path = getattr(sys, '_MEIPASS')
     except Exception:
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
@@ -53,7 +56,7 @@ class Rag:
         # 'evaluation_df.pkl' file so that you can evaluate later the RAG performance (False if you don't want this)
         self.evaluation_mode = False
 
-        options_config_json = open(resource_path('options_config.json'), 'r')
+        options_config_json = open(resource_path('options_config.json', app_generated_file=True), 'r')
         options_config = json.load(options_config_json)
         options_config_json.close()
         self.menu_language = options_config["menu_language_var"]
@@ -85,9 +88,12 @@ class Rag:
         self.bg_wiki_chunks_and_embeddings_csv_filename = resource_path('bg_wiki_chunks_and_embeddings.csv')
         self.bg_wiki_faiss_store_filename = resource_path("bg_wiki_faiss_vector_db.index")
 
-        self.uploaded_files_chunk_dict_filename = resource_path("uploaded_files_chunk_dict.pkl")
-        self.uploaded_files_faiss_vector_db_filename = resource_path("uploaded_files_faiss_vector_db.index")
-        self.uploaded_files_bm25s_store_filename = resource_path("uploaded_files_bm25s_chunks_index")
+        self.uploaded_files_chunk_dict_filename = resource_path("uploaded_files_chunk_dict.pkl",
+                                                                app_generated_file=True)
+        self.uploaded_files_faiss_vector_db_filename = resource_path("uploaded_files_faiss_vector_db.index",
+                                                                     app_generated_file=True)
+        self.uploaded_files_bm25s_store_filename = resource_path("uploaded_files_bm25s_chunks_index",
+                                                                 app_generated_file=True)
 
         self.focus_news_chunk_dict_filename = resource_path("focus_news_chunk_dict.pkl")
         self.focus_news_faiss_store_filename = resource_path("focus_news_faiss_vector_db.index")
@@ -368,11 +374,16 @@ class Rag:
 
     @staticmethod
     def is_llama_gpu_available() -> bool:
-        # add your own path to the installation directory of the BG_RAG app (up to BG_RAG directory) if you want to use
-        # this function which checks whether llama is available for gpu (don't change the part of the path from venv
-        # directory onwards)
+        # checks whether the GPU is found by llama_cpp; if the answer is False, then the LLM will NOT be loaded on
+        # the GPU
+
+        # for running the program by Pycharm IDE
         lib = load_shared_library(
-            'llama', pathlib.Path(rf'{Path.home()}\PycharmProjects\BG_RAG\venv\Lib\site-packages\llama_cpp\lib'))
+            'llama', pathlib.Path(rf'{resource_path("")}venv\Lib\site-packages\llama_cpp\lib'))
+
+        # for running the installed BG RAG program from the .exe file
+        # lib = load_shared_library(
+        #     'llama', pathlib.Path(resource_path(f"llama_cpp" + os.sep + "lib")))
 
         return bool(lib.llama_supports_gpu_offload())
 
@@ -760,8 +771,10 @@ class Rag:
         return []
 
     def upload_files(self, user_filenames, united_chunks_dictionary=None, index_faiss_user_files=None,
-                     united_embeddings=None, chunk_dict_filename=resource_path("uploaded_files_chunk_dict.pkl"),
-                     faiss_store_filename=resource_path("uploaded_files_faiss_vector_db.index")):
+                     united_embeddings=None, chunk_dict_filename=resource_path("uploaded_files_chunk_dict.pkl",
+                                                                               app_generated_file=True),
+                     faiss_store_filename=resource_path("uploaded_files_faiss_vector_db.index",
+                                                        app_generated_file=True)):
         if self.menu_language == "bulgarian":
             logging.info("Качване на файловете...")
         else:
@@ -1370,9 +1383,9 @@ class Rag:
     def load_llm(self):
         print("Loading LLM...")
         if self.menu_language == "bulgarian":
-            logging.info(f'Зареждане на LLM ({self.model_file})...')
+            logging.info(f'Зареждане на LLM ({self.model_file}) на {self.device}...')
         else:
-            logging.info(f"Loading LLM ({self.model_file})...")
+            logging.info(f"Loading LLM ({self.model_file}) на {self.device}...")
 
         try:
             model_path = hf_hub_download(self.model_gguf_name, filename=self.model_file)
@@ -2616,7 +2629,7 @@ class Rag:
         else:
             needs_rag_text = "No"
 
-        if just_llm or needs_rag_text == "No":
+        if just_llm or needs_rag_text == "No" or (not self.chunks_and_embeddings) or (not self.faiss_index):
             needs_rag = False
         else:
             needs_rag = True
@@ -2640,16 +2653,37 @@ class Rag:
         relevant_urls = []
 
         if needs_rag:
-            response, relevant_urls = self.ask_rag(query, use_rag_fusion=use_rag_fusion, use_hyde=use_hyde,
-                                                   use_generated_subqueries=use_generated_subqueries,
-                                                   use_relevant_resource_llm_check=use_relevant_resource_llm_check,
-                                                   translate_query=translate_query,
-                                                   print_query=print_query, print_response=print_response,
-                                                   print_urls=print_urls, print_context_passages=print_context_passages,
-                                                   print_steps=print_steps, temperature=temperature,
-                                                   max_answer_tokens=max_answer_tokens, topn_articles=topn_articles)
+            try:
+                response, relevant_urls = self.ask_rag(query, use_rag_fusion=use_rag_fusion, use_hyde=use_hyde,
+                                                       use_generated_subqueries=use_generated_subqueries,
+                                                       use_relevant_resource_llm_check=use_relevant_resource_llm_check,
+                                                       translate_query=translate_query,
+                                                       print_query=print_query, print_response=print_response,
+                                                       print_urls=print_urls,
+                                                       print_context_passages=print_context_passages,
+                                                       print_steps=print_steps, temperature=temperature,
+                                                       max_answer_tokens=max_answer_tokens, topn_articles=topn_articles)
+            except Exception as e:
+                logging.exception(f"ERROR: {e}", stack_info=True)
+                print(f"ERROR: {e}")
+                if self.menu_language == "bulgarian":
+                    logging.info("ПРОБЛЕМ с работата на RAG системата!")
+                else:
+                    logging.info("PROBLEM with the work of the RAG system!")
+                print("PROBLEM with the work of the RAG system!")
+                return "", []
         else:
-            response = self.ask_llm(query, use_chat_history=False)
+            try:
+                response = self.ask_llm(query, use_chat_history=False)
+            except Exception as e:
+                logging.exception(f"ERROR: {e}", stack_info=True)
+                print(f"ERROR: {e}")
+                if self.menu_language == "bulgarian":
+                    logging.info("ПРОБЛЕМ с работата на LLM!")
+                else:
+                    logging.info("PROBLEM with the work of the LLM!")
+                print("PROBLEM with the work of the LLM!")
+                return "", []
 
         if self.menu_language == "bulgarian":
             user_input = "Потребител: " + user_input

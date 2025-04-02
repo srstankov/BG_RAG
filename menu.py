@@ -1,4 +1,6 @@
 import json
+import sys
+
 import customtkinter as ctk
 from PIL import Image
 from tkinter import filedialog as fd
@@ -6,6 +8,7 @@ import os
 from tkinter import messagebox
 import logging
 from pathlib import Path
+import shutil
 from rag import resource_path
 
 
@@ -41,7 +44,12 @@ class Menu(ctk.CTkFrame):
         self.grid(row=0, column=0, rowspan=2, sticky='nsew')
 
         self.menu = ctk.CTkTabview(master=self)
-        options_config_json = open(resource_path('options_config.json'), 'r')
+        if not os.path.exists(resource_path('options_config.json', app_generated_file=True)) and \
+                sys.platform == 'win32':
+            os.makedirs(os.path.dirname(f"{os.getenv('LOCALAPPDATA') + os.sep}BG RAG{os.sep}"), exist_ok=True)
+            shutil.copy2(resource_path('options_config.json'), resource_path('options_config.json',
+                                                                             app_generated_file=True))
+        options_config_json = open(resource_path('options_config.json', app_generated_file=True), 'r')
         options_config = json.load(options_config_json)
         options_config_json.close()
         if options_config['menu_language_var'] == "english":
@@ -139,7 +147,7 @@ class OptionsFrame(ctk.CTkFrame):
                                                  onvalue='uploaded_db', offvalue='no_uploaded_db',
                                                  command=self.database_click)
 
-        if not os.path.exists(resource_path('imported_files.txt')):
+        if not os.path.exists(resource_path('imported_files.txt', app_generated_file=True)):
             self.uploaded_db_check.configure(state=ctk.DISABLED)
 
         self.display_resources_var = ctk.StringVar(value='resources')
@@ -223,14 +231,14 @@ class OptionsFrame(ctk.CTkFrame):
         self.english_language_check.place(relx=0.52, rely=0.93, relwidth=0.48, relheight=0.06, anchor='nw')
 
     def read_options_config(self, just_llm_unchecked=False):
-        options_config_json = open(resource_path('options_config.json'), 'r')
+        options_config_json = open(resource_path('options_config.json', app_generated_file=True), 'r')
         options_config = json.load(options_config_json)
         options_config_json.close()
         if just_llm_unchecked:
             self.rag_fusion_var.set(options_config['rag_fusion_var'])
             self.hyde_var.set(options_config['hyde_var'])
             self.subqueries_var.set(options_config['subqueries_var'])
-            if os.path.exists(resource_path('imported_files.txt')):
+            if os.path.exists(resource_path('imported_files.txt', app_generated_file=True)):
                 self.default_db_var.set(options_config['default_db_var'])
                 self.uploaded_db_var.set(options_config['uploaded_db_var'])
             else:
@@ -244,12 +252,12 @@ class OptionsFrame(ctk.CTkFrame):
             self.relevant_resource_llm_check_var.set(options_config['relevant_resource_llm_check_var'])
 
         elif options_config['just_llm_var'] == 'no_just_llm':
-            if os.path.exists(resource_path('imported_files.txt')):
+            if os.path.exists(resource_path('imported_files.txt', app_generated_file=True)):
                 self.uploaded_db_check.configure(state=ctk.NORMAL)
             self.rag_fusion_var.set(options_config['rag_fusion_var'])
             self.hyde_var.set(options_config['hyde_var'])
             self.subqueries_var.set(options_config['subqueries_var'])
-            if os.path.exists(resource_path('imported_files.txt')):
+            if os.path.exists(resource_path('imported_files.txt', app_generated_file=True)):
                 self.default_db_var.set(options_config['default_db_var'])
                 self.uploaded_db_var.set(options_config['uploaded_db_var'])
             else:
@@ -296,7 +304,7 @@ class OptionsFrame(ctk.CTkFrame):
                 self.change_language("bulgarian")
 
     def update_options_config(self, on_exit=False):
-        options_config_json = open(resource_path('options_config.json'), 'r+')
+        options_config_json = open(resource_path('options_config.json', app_generated_file=True), 'r+')
         options_config = json.load(options_config_json)
         if not on_exit or self.just_llm_var.get() == 'no_just_llm':
             options_config['rag_fusion_var'] = self.rag_fusion_var.get()
@@ -458,7 +466,7 @@ class ImportFrame(ctk.CTkFrame):
 
         self.check_for_previously_imported_files()
 
-        options_config_json = open(resource_path('options_config.json'), 'r')
+        options_config_json = open(resource_path('options_config.json', app_generated_file=True), 'r')
         options_config = json.load(options_config_json)
         options_config_json.close()
         self.menu_language = options_config["menu_language_var"]
@@ -466,8 +474,9 @@ class ImportFrame(ctk.CTkFrame):
             self.change_language("bulgarian")
 
     def check_for_previously_imported_files(self):
-        if os.path.exists(resource_path('imported_files.txt')):
-            imported_files_txt = open(resource_path('imported_files.txt'), 'r', encoding="utf-8")
+        if os.path.exists(resource_path('imported_files.txt', app_generated_file=True)):
+            imported_files_txt = open(resource_path('imported_files.txt', app_generated_file=True), 'r',
+                                      encoding="utf-8")
             self.imported_filenames = imported_files_txt.read().splitlines()
             self.selected_filenames = self.imported_filenames
             self.add_files_labels(self.imported_files_frame)
@@ -691,7 +700,7 @@ class SaveFrame(ctk.CTkFrame):
         self.save_info_label.place(relx=0.5, rely=0.86, relwidth=0.98, relheight=0.06, anchor='center')
         self.successful_save = True
 
-        options_config_json = open(resource_path('options_config.json'), 'r')
+        options_config_json = open(resource_path('options_config.json', app_generated_file=True), 'r')
         options_config = json.load(options_config_json)
         options_config_json.close()
         self.menu_language = options_config["menu_language_var"]
@@ -764,7 +773,7 @@ class LogFrame(ctk.CTkFrame):
         self.log_relevant_chunks_check.place(relx=0.04, rely=0.07, relwidth=0.96, relheight=0.06, anchor='nw')
         self.log_textbox.place(relx=0, rely=0.14, relwidth=1, relheight=0.85, anchor='nw')
 
-        options_config_json = open(resource_path('options_config.json'), 'r')
+        options_config_json = open(resource_path('options_config.json', app_generated_file=True), 'r')
         options_config = json.load(options_config_json)
         options_config_json.close()
         self.menu_language = options_config["menu_language_var"]
@@ -772,7 +781,8 @@ class LogFrame(ctk.CTkFrame):
             self.change_language("bulgarian")
 
         text_handler = TextHandler(self.log_textbox)
-        logging.basicConfig(filename=resource_path('rag_log.log'), filemode='a', level=logging.INFO,
+        logging.basicConfig(filename=resource_path('rag_log.log', app_generated_file=True), filemode='a',
+                            encoding='utf-8', level=logging.INFO,
                             format='%(asctime)s - %(levelname)s - %(message)s')
 
         logger = logging.getLogger()
@@ -806,7 +816,7 @@ class HelpFrame(ctk.CTkFrame):
         self.help_textbox = ctk.CTkTextbox(master=self, font=self.text_font, wrap='word', state=ctk.DISABLED)
         self.help_textbox.place(relx=0, rely=0, relwidth=1, relheight=1, anchor='nw')
 
-        options_config_json = open(resource_path('options_config.json'), 'r')
+        options_config_json = open(resource_path('options_config.json', app_generated_file=True), 'r')
         options_config = json.load(options_config_json)
         options_config_json.close()
         self.menu_language = options_config["menu_language_var"]
@@ -833,9 +843,7 @@ class HelpFrame(ctk.CTkFrame):
     def add_bulgarian_help(self):
         self.add_text("Добре дошли в приложението BG RAG!\n"
                       "Това е RAG система, която работи добре както с ресурси на български, така и на английски език.\n"
-                      "Използва LLM модела „INSAIT-Institute/BgGPT-7B-Instruct-v0.2-GGUF“, създаден от INSAIT.\n"
-                      "За да използвате приложението в пълния му капацитет, трябва да инсталирате llama.cpp и "
-                      "CUDA Toolkit на вашия компютър.\n\n"
+                      "Използва LLM модела 'INSAIT-Institute/BgGPT-Gemma-2-9B-IT-v1.0-GGUF', създаден от INSAIT.\n\n"
                       "Обща информация за системата:\n\n"
                       "Потребителят може да копира отговор на системата или заявка, като кликне върху текста в чата."
                       "Ако показаният ресурс е url, може също да се щракне върху него и връзката ще се отвори в "
@@ -847,8 +855,19 @@ class HelpFrame(ctk.CTkFrame):
                       "Най-важният аспект на системата RAG е процесът на извличане, където релевантни към "
                       "потребителската заявка откъси от текст трябва да бъдат намерени от база данни с текстови "
                       "документи. В тази система за тази цел са използвани както векторно търсене, така и търсене по "
-                      "ключови думи, като резултатите се комбинират с реципрочния ранг алгоритъма Reciprocal Rank "
-                      "Fusion (RRF) за определяне на крайните релевантни откъси към заявката. Може също да се "
+                      "ключови думи, като резултатите се комбинират с алгоритъма Reciprocal Rank Fusion (RRF) за "
+                      "определяне на 20 релевантни откъси към заявката. След това тези 20 релевантни откъси се "
+                      "реранкират (ранкират се наново) чрез реранкиращия (reranking) алгоритъм "
+                      "jinaai/jina-reranker-v2-base-multilingual. В зависимост от позицията на плъзгача за брой на "
+                      "релевантните откъси в раздела 'Опции' се връща определения брой откъси с най-добра "
+                      "релевантност спрямо реранкиращия модел и откъсите се подават като контекст на LLM, който да се "
+                      "използва за отговаряне на заявката. Ако е избрана опцията LLM да провери релевантните "
+                      "откъси, реранкираните 20 релевантни откъси се проверяват от LLM дали наистина имат полезна "
+                      "информация за заявката, като процесът продължава, докато не се събере определената от "
+                      "потребителя бройка за релевантни откъси или докато 20-те реранкирани откъси не се изчерпат. "
+                      "След това финалните релевантни откъси се подават като контекст "
+                      "на LLM, който да се използва за отговаряне на заявката. "
+                      "Може също да се "
                       "използват множество различни техники за подобряване на извличането на релевантни ресурси, "
                       "налични в раздела 'Опции'.\n\n"
                       "От редица експерименти може да се сподели, че най-добрите техники, които трябва да се използват "
@@ -915,7 +934,8 @@ class HelpFrame(ctk.CTkFrame):
                       "Там също ще бъдат показани грешки и изключения, ако такива са възникнали по време на "
                       "използването на системата."
                       "Освен това съдържанието, показано в раздела, се съхранява като лог файл с името 'rag_log.log' в "
-                      "инсталационна директория на системата. Има опция 'Покажи релевантните откъси', която отпечатва "
+                      f"директорията '{resource_path('', app_generated_file=True)}'.\n"
+                      "Има опция 'Покажи релевантните откъси', която отпечатва "
                       "в лога откъсите от текст, които RAG системата е извлекла от базата данни като релевантни към "
                       "потребителската заявка."
                       "По подразбиране тази опция е изключена.\n\n\n"
@@ -937,10 +957,11 @@ class HelpFrame(ctk.CTkFrame):
                       "когато опцията HyDE е включена, векторно търсене и търсене по ключови думи се използва за "
                       "извличането на подходящи откъси и за оригиналната заявка."
                       "Най-подходящите откъси, намерени за отговора на HyDE от LLM и за оригиналната заявка, се "
-                      "комбинират с алгоритъма RRF за извличане на последните топ n подходящи текстови откъси. Тази "
-                      "техника може да бъде поставена на второ място като единична техника за подобряване на процеса "
-                      "на извличане. За най-добри резултати при процеса на извличане е препоръчително да се използват "
-                      "както HyDE, така и RAG Fusion, дори ако за това е необходимо малко повече време "
+                      "комбинират с алгоритъма RRF за извличане на 20-те релевантни текстови откъси, които "
+                      "впоследствие се подават на реранкиращия алгоритъм. "
+                      "Тази техника може да бъде поставена на второ място като единична техника за подобряване на "
+                      "процеса на извличане. За най-добри резултати при процеса на извличане е препоръчително да се "
+                      "използват както HyDE, така и RAG Fusion, дори ако за това е необходимо малко повече време "
                       "за генерирането на отговор от системата. Те могат дори да се комбинират със следващата опция - "
                       "техника на генериране на подзаявки.\n\n"
                       "Опцията за генерирани подзаявки също използва LLM, за да раздели сложна заявка на няколко "
@@ -951,7 +972,9 @@ class HelpFrame(ctk.CTkFrame):
                       "така че всяка една от подзаявките да може да се използва в процеса на извличане за намиране на "
                       "релевантни ресурси."
                       "Най-релевантните откъси за всяка подзаявка, както и оригиналната, се комбинират с "
-                      "RRF алгоритъма за получаване на окончателните релевантни откъси, които се предоставят на LLM "
+                      "RRF алгоритъма за получаване на 20-те релевантни откъси, които се предоставят на "
+                      "реранкиращия алгоритъм, който ги ранкира наново спрямо това колко са релевантни към заявката и "
+                      "най-релевантните n (n зависи от плъзгача за брой релевантни откъси) от тях се подават на LLM "
                       "като контекст, който да бъде използван за генерирането на отговор на потребителското запитване. "
                       "Личен избор е дали да се използва тази опция или не, тъй като понякога може да не предоставя "
                       "достатъчно контекст в подзаявките. Следете генерираните подзаявки в раздела 'Лог' и решете дали "
@@ -1004,11 +1027,17 @@ class HelpFrame(ctk.CTkFrame):
                       "както търсене по ключови думи, така и векторно търсене за извличане на релевантни "
                       "откъси и комбинира резултатите с алгоритъма Reciprocal Rank Fusion (RRF).\n\n"
                       "'Провери релевантните източници с LLM' – тази опция използва LLM за филтриране на извлечените "
-                      "откъси от системата RAG. LLM решава дали извлечените откъси наистина съдържат "
+                      "откъси от системата RAG. LLM решава дали 20-те реранкирани релевантни откъса наистина съдържат "
                       "информация, свързана със заявката и ако някой откъс не съдържа такава, той се отхвърля и не се "
-                      "използва като контекст за генерирането на отговор на заявката. По този начин откъсите се "
-                      "филтрират и само най-релевантните откъси се използват като контекст за генериране на отговор "
-                      "на заявка от LLM.\n\n"
+                      "използва като контекст за генерирането на отговор на заявката. Процесът започва от "
+                      "най-релевантните откъси за заявката спрямо реранкирането и продължава, докато не се събере "
+                      "бройката за релевантни откъси, посочена от потребителя (5 е по подразбиране) или докато не се "
+                      "свършат извлечените откъси. Финалните релевантни откъси се подават като контекст на LLM, който "
+                      "да се използва за отговарянето на потребителската заявка. "
+                      "Ако няма нито един откъс, определен от LLM като релевантен към заявката, то само "
+                      "най-релевантния откъс спрямо реранкиращия алгоритъм се подава на LLM като контекст. "
+                      "По този начин откъсите се филтрират допълнително и само най-релевантните откъси се използват "
+                      "като контекст за генериране на отговор на заявка от LLM.\n\n"
                       "'Брой релевантни откъси' – този плъзгач може да се използва за промяна на броя "
                       "топ релевантни откъси, връщани от процеса на извличане. Диапазонът е от 1 до 7, стойността по "
                       "подразбиране е 3. Предпочитаният диапазон за стойността е от 3 до 5. Променете го въз основа на "
@@ -1018,9 +1047,7 @@ class HelpFrame(ctk.CTkFrame):
     def add_english_help(self):
         self.add_text("Welcome to BG RAG app!\n"
                       "This is a RAG system that works well with both Bulgarian and English language resources.\n"
-                      "It uses the 'INSAIT-Institute/BgGPT-7B-Instruct-v0.2-GGUF' LLM model created by INSAIT.\n"
-                      "In order to use the app in its full capacity, you need to install llama.cpp and "
-                      "CUDA Toolkit on your computer.\n\n"
+                      "It uses the 'INSAIT-Institute/BgGPT-Gemma-2-9B-IT-v1.0-GGUF' LLM model created by INSAIT.\n\n"
                       "General information about the system:\n\n"
                       "The user can copy an answer of the system or a query by clicking on the text in the chat. "
                       "If the resource displayed is a url, it can also be clicked and the link will be opened in the "
@@ -1031,7 +1058,17 @@ class HelpFrame(ctk.CTkFrame):
                       "The most important aspect of the RAG system is the retrieval process where relevant chunks "
                       "to the user query need to be found from a database of text documents. In this system vector and "
                       "keyword search are used for this part and the results are combined with the Reciprocal Rank "
-                      "Fusion (RRF) algorithm to determine the final relevant chunks to the query. There can also be a "
+                      "Fusion (RRF) algorithm to determine 20 relevant chunks to the query. Then these 20 relevant "
+                      "chunks are reranked by the reranking algorithm jinaai/jina-reranker-v2-base-multilingual. "
+                      "The top n relevant chunks (where n is determined by the position of the slider in the 'Options' "
+                      "tab) after the reranking are then provided to the LLM as context which is used for the "
+                      "answering of the query. If the option 'Check relevant resources by LLM' is turned on, the "
+                      "reranked 20 relevant chunks are checked by the LLM whether they really contain useful "
+                      "information relevant to the query and the process continues till the final relevant chunks "
+                      "reach the number n or the 20 reranked chunks are all checked. The final relevant "
+                      "chunks are provided to the LLM as context to be used for answering the user query. "
+                      "If no chunk is relevant to the query according to the LLM, then just the most relevant chunk by "
+                      "the reranking is provided as context to the LLM for answering the query. There can also be a "
                       "variety of different techniques, available in the 'Options' tab.\n\n"
                       "From a number of experiments, the best techniques to be used for better retrieval are RAG "
                       "Fusion and HyDE together. If the user wants to use only one technique in order to reduce the "
@@ -1089,7 +1126,8 @@ class HelpFrame(ctk.CTkFrame):
                       "see what happens in the background of the app based on the techniques and options chosen. It "
                       "will also show errors and exceptions if such occurred during the usage of the system. "
                       "The content shown in the tab is also stored as a log file with the name 'rag_log.log' in the "
-                      "installation directory of the system. There is an option 'Show relevant chunks' which prints "
+                      f"directory '{resource_path('', app_generated_file=True)}'.\n"
+                      "There is an option 'Show relevant chunks' which prints "
                       "in the log the chunks of text that the RAG system has decided as relevant to the user query. "
                       "By default, this option is turned off.\n\n\n"
                       "'Options' tab:\n\n"
@@ -1108,7 +1146,8 @@ class HelpFrame(ctk.CTkFrame):
                       "query, using both vector and keyword search. In this system, when HyDE option is on, "
                       "vector and keyword search is also used for retrieval of relevant chunks for the original query. "
                       "The top relevant chunks found for the HyDE LLM answer and the original query are combined with "
-                      "the RRF algorithm to retrieve the final top n relevant chunks. This technique can be placed "
+                      "the RRF algorithm to retrieve 20 relevant chunks which are given to the reranking algorithm. "
+                      "This technique can be placed "
                       "at second place as a single technique for improving the retrieval process. For best retrieval "
                       "results, it is recommended to use both HyDE and RAG Fusion even if it costs a little more time "
                       "for the generation of the answer. They can be even combined with the next option - generated "
@@ -1120,8 +1159,11 @@ class HelpFrame(ctk.CTkFrame):
                       "queries. They are modified to be self-sufficient in order to retain the context so that each "
                       "one of the subqueries can be used in the retrieval process for finding relevant resources. "
                       "The top relevant chunks for each subquery as well as the original one are combined with the "
-                      "RRF algorithm to get the final relevant chunks that are provided to the LLM as context to be "
-                      "used for answering the user query. It is personal choice whether to use this option or not "
+                      "RRF algorithm to get the 20 relevant chunks that are provided to the reranking algorithm to "
+                      "rerank them based on how relevant they are to the query. After this the top n relevant chunks "
+                      "(n is determined by the slider in the 'Options' tab) of them are provided to the LLM as context "
+                      "to be used for answering the user query. "
+                      "It is personal choice whether to use this option or not "
                       "as it may sometimes not provide enough context in the subqueries. Keep an eye of the "
                       "generated subqueries in the 'Log' tab and decide whether to use the option or not.\n\n"
                       "'Database':\n"
@@ -1171,9 +1213,16 @@ class HelpFrame(ctk.CTkFrame):
                       "system implemented in the app uses both keyword and vector search for the retrieval of relevant "
                       "chunks and combines the results with the Reciprocal Rank Fusion (RRF) algorithm.\n\n"
                       "'Check relevant resources by LLM' - this option utilises the LLM to filter the retrieved "
-                      "chunks by the RAG system. The LLM decides whether the retrieved chunks really contain "
-                      "information relevant to the query and if a chunks does not, it is discarded and is not used for "
-                      "the answer generation as context. In this way, the chunks are filtered and only the most "
+                      "chunks by the RAG system. The LLM decides whether the 20 reranked relevant chunks really "
+                      "contain information relevant to the query and if a chunk does not, it is discarded and is not "
+                      "used as context for the answer generation. The process begins with the most relevant chunks to "
+                      "the query by the reranking and continues till the number n of relevant chunks is reached (where "
+                      "n is the position of the slider in the 'Options' tab, 5 is the value by default) or till the "
+                      "reranked chunks are all checked by the LLM. The final relevant chunks are provided to the LLM "
+                      "as context to be used for answering the user query.  If none chunks are determined as relevant "
+                      "to the query by the LLM, then only the most relevant chunk by the reranking algorithm is given "
+                      "to the LLM as context. "
+                      "In this way, the chunks are filtered and only the most "
                       "relevant chunks are used as context for the query answer generation.\n\n"
                       "'Top n relevant chunks for context' - this slider can be used to modify the number of top "
                       "relevant chunks returned by the retrieval process. The range is 1 to 7, the default is 3. The "

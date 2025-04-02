@@ -75,7 +75,7 @@ class App(ctk.CTk):
         self.rag.load_reranking_model()
         self.rag.load_embedding_model()
         self.rag.read_database()
-        if os.path.exists(resource_path('imported_files.txt')):
+        if os.path.exists(resource_path('imported_files.txt', app_generated_file=True)):
             self.rag.read_uploaded_files_data()
             self.menu.import_frame.delete_button.configure(state=ctk.NORMAL)
         self.menu.import_frame.choose_files_button.configure(state=ctk.NORMAL)
@@ -83,14 +83,14 @@ class App(ctk.CTk):
 
         if self.menu.options_frame.menu_language_var.get() == "bulgarian":
             logging.info("Забележка: Този лог ще се запази във файла 'rag_log.log' в "
-                         "инсталационната директория на приложението.")
+                         f"директорията '{resource_path('', app_generated_file=True)}'.")
             logging.info("Зареждането завърши.")
             logging.info("Приложението може вече да бъде използвано нормално.")
             if self.rag.evaluation_mode:
                 logging.info("Активиран е режим за оценяване на системата.")
         else:
             logging.info("Note: This log will be stored in the file 'rag_log.log' in the "
-                         "installation directory of the app.")
+                         f"directory '{resource_path('', app_generated_file=True)}'.")
             logging.info("Loading completed.")
             logging.info("The app can now be used normally.")
             if self.rag.evaluation_mode:
@@ -299,10 +299,12 @@ class App(ctk.CTk):
         if self.menu.options_frame.just_llm_var.get() == 'no_just_llm':
             self.menu.options_frame.uploaded_db_check.configure(state=ctk.NORMAL)
         self.chat_input.send_button.configure(state=ctk.NORMAL)
-        if os.path.exists(resource_path('imported_files.txt')):
-            imported_files_txt = open(resource_path('imported_files.txt'), 'a', encoding="utf-8")
+        if os.path.exists(resource_path('imported_files.txt', app_generated_file=True)):
+            imported_files_txt = open(resource_path('imported_files.txt', app_generated_file=True), 'a',
+                                      encoding="utf-8")
         else:
-            imported_files_txt = open(resource_path('imported_files.txt'), 'w', encoding="utf-8")
+            imported_files_txt = open(resource_path('imported_files.txt', app_generated_file=True), 'w',
+                                      encoding="utf-8")
         for file in self.menu.import_frame.selected_filenames:
             imported_files_txt.write(file)
             imported_files_txt.write('\n')
@@ -315,7 +317,7 @@ class App(ctk.CTk):
         if self.menu.options_frame.just_llm_var.get() == 'no_just_llm':
             self.menu.options_frame.default_db_var.set('default_db')
         self.menu.options_frame.uploaded_db_check.configure(state=ctk.DISABLED)
-        os.remove(resource_path('imported_files.txt'))
+        os.remove(resource_path('imported_files.txt', app_generated_file=True))
         self.rag.delete_uploaded_files()
         print(f"Deleted files: {self.menu.import_frame.imported_filenames}")
 
