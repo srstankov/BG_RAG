@@ -1,4 +1,6 @@
 import json
+import os
+
 import customtkinter as ctk
 import webbrowser
 import validators
@@ -102,7 +104,8 @@ class ChatOutput(ctk.CTkScrollableFrame):
                 else:
                     resource_label_1 = ctk.CTkLabel(master=self, padx=10, pady=10, text=relevant_resources[0],
                                                     fg_color=fg_color_label, corner_radius=8, font=self.text_font,
-                                                    justify='left', wraplength=500)
+                                                    justify='left', wraplength=500, cursor='hand2')
+                    resource_label_1.bind("<Button-1>", lambda e: os.startfile(relevant_resources[0]))
                     resource_label_1.pack(side=ctk.TOP, anchor='w', padx=20, pady=1, expand=True)
 
                 if len(relevant_resources) >= 2:
@@ -115,7 +118,8 @@ class ChatOutput(ctk.CTkScrollableFrame):
                     else:
                         resource_label_2 = ctk.CTkLabel(master=self, padx=10, pady=10, text=relevant_resources[1],
                                                         fg_color=fg_color_label, corner_radius=8, font=self.text_font,
-                                                        justify='left', wraplength=500)
+                                                        justify='left', wraplength=500, cursor='hand2')
+                        resource_label_2.bind("<Button-1>", lambda e: os.startfile(relevant_resources[1]))
                         resource_label_2.pack(side=ctk.TOP, anchor='w', padx=20, pady=1, expand=True)
 
                 if len(relevant_resources) >= 3:
@@ -128,7 +132,8 @@ class ChatOutput(ctk.CTkScrollableFrame):
                     else:
                         resource_label_3 = ctk.CTkLabel(master=self, padx=10, pady=10, text=relevant_resources[2],
                                                         fg_color=fg_color_label, corner_radius=8, font=self.text_font,
-                                                        justify='left', wraplength=500)
+                                                        justify='left', wraplength=500, cursor='hand2')
+                        resource_label_3.bind("<Button-1>", lambda e: os.startfile(relevant_resources[2]))
                         resource_label_3.pack(side=ctk.TOP, anchor='w', padx=20, pady=1, expand=True)
 
                 if len(relevant_resources) >= 4:
@@ -141,7 +146,8 @@ class ChatOutput(ctk.CTkScrollableFrame):
                     else:
                         resource_label_4 = ctk.CTkLabel(master=self, padx=10, pady=10, text=relevant_resources[3],
                                                         fg_color=fg_color_label, corner_radius=8, font=self.text_font,
-                                                        justify='left', wraplength=500)
+                                                        justify='left', wraplength=500, cursor='hand2')
+                        resource_label_4.bind("<Button-1>", lambda e: os.startfile(relevant_resources[3]))
                         resource_label_4.pack(side=ctk.TOP, anchor='w', padx=20, pady=1, expand=True)
 
                 if len(relevant_resources) >= 5:
@@ -154,7 +160,8 @@ class ChatOutput(ctk.CTkScrollableFrame):
                     else:
                         resource_label_5 = ctk.CTkLabel(master=self, padx=10, pady=10, text=relevant_resources[4],
                                                         fg_color=fg_color_label, corner_radius=8, font=self.text_font,
-                                                        justify='left', wraplength=500)
+                                                        justify='left', wraplength=500, cursor='hand2')
+                        resource_label_5.bind("<Button-1>", lambda e: os.startfile(relevant_resources[4]))
                         resource_label_5.pack(side=ctk.TOP, anchor='w', padx=20, pady=1, expand=True)
 
                 if len(relevant_resources) >= 6:
@@ -167,7 +174,8 @@ class ChatOutput(ctk.CTkScrollableFrame):
                     else:
                         resource_label_6 = ctk.CTkLabel(master=self, padx=10, pady=10, text=relevant_resources[5],
                                                         fg_color=fg_color_label, corner_radius=8, font=self.text_font,
-                                                        justify='left', wraplength=500)
+                                                        justify='left', wraplength=500, cursor='hand2')
+                        resource_label_6.bind("<Button-1>", lambda e: os.startfile(relevant_resources[5]))
                         resource_label_6.pack(side=ctk.TOP, anchor='w', padx=20, pady=1, expand=True)
 
                 if len(relevant_resources) >= 7:
@@ -180,7 +188,8 @@ class ChatOutput(ctk.CTkScrollableFrame):
                     else:
                         resource_label_7 = ctk.CTkLabel(master=self, padx=10, pady=10, text=relevant_resources[6],
                                                         fg_color=fg_color_label, corner_radius=8, font=self.text_font,
-                                                        justify='left', wraplength=500)
+                                                        justify='left', wraplength=500, cursor='hand2')
+                        resource_label_7.bind("<Button-1>", lambda e: os.startfile(relevant_resources[6]))
                         resource_label_7.pack(side=ctk.TOP, anchor='w', padx=20, pady=1, expand=True)
         self._parent_canvas.yview_moveto(1.0)
 

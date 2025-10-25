@@ -495,6 +495,7 @@ class ImportFrame(ctk.CTkFrame):
         self.selected_files += fd.askopenfiles(title='Select files', filetypes=filetypes, initialdir=str(Path.home()))
         for file in self.selected_files:
             self.selected_filenames.append(os.path.basename(file.name))
+
         if self.selected_files:
             self.clear_selected_files_button.configure(state=ctk.NORMAL)
             self.info_label.configure(font=ctk.CTkFont(family='Helvetica', size=14), text_color='yellow')
@@ -592,6 +593,7 @@ class ImportFrame(ctk.CTkFrame):
             self.selected_filenames = []
             self.imported_filenames = []
             self.clear_selected_files_button.configure(state=ctk.DISABLED)
+            self.import_button.configure(state=ctk.DISABLED)
             self.info_label.configure(font=ctk.CTkFont(family='Helvetica', size=14), text_color='yellow')
             if self.menu_language == "english":
                 self.info_text.set("Click on 'Choose files' if you want to add files to the RAG database.")

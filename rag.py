@@ -560,12 +560,15 @@ class Rag:
                                                       (self.evaluation_df['hyde'] == False)]
         only_hyde_rows = self.evaluation_df.loc[(self.evaluation_df['rag_fusion'] == False) &
                                                 (self.evaluation_df['hyde'] == True)]
+        # generated_subqueries_rows = self.evaluation_df.loc[self.evaluation_df['generated_subqueries'] == True]
+        # none_rows = self.evaluation_df.loc[self.evaluation_df['generated_subqueries'] == False]
 
         if language:
             rag_fusion_rows = rag_fusion_rows.loc[rag_fusion_rows['language'] == language]
             hyde_rows = hyde_rows.loc[hyde_rows['language'] == language]
             both_rows = both_rows.loc[both_rows['language'] == language]
             none_rows = none_rows.loc[none_rows['language'] == language]
+            # generated_subqueries_rows = generated_subqueries_rows.loc[generated_subqueries_rows['language'] == language]
             only_rag_fusion_rows = only_rag_fusion_rows.loc[only_rag_fusion_rows['language'] == language]
             only_hyde_rows = only_hyde_rows.loc[only_hyde_rows['language'] == language]
 
@@ -573,6 +576,7 @@ class Rag:
         self.calculate_df_averages(hyde_rows, technique="hyde")
         self.calculate_df_averages(both_rows, technique="both")
         self.calculate_df_averages(none_rows, technique="none")
+        # self.calculate_df_averages(generated_subqueries_rows, technique="generated_subqueries")
         self.calculate_df_averages(only_rag_fusion_rows, technique="only_rag_fusion")
         self.calculate_df_averages(only_hyde_rows, technique="only_hyde")
 
@@ -580,6 +584,7 @@ class Rag:
         print(f"hyde_rows: {len(hyde_rows)}")
         print(f"both_rows: {len(both_rows)}")
         print(f"none_rows: {len(none_rows)}")
+        # print(f"generated_subqueries_rows: {len(generated_subqueries_rows)}")
         print(f"only_rag_fusion_rows: {len(only_rag_fusion_rows)}")
         print(f"only_hyde_rows: {len(only_hyde_rows)}\n")
 
@@ -646,7 +651,7 @@ class Rag:
             processed_chunk = self.lemmatize_text(self.preprocess_text(joined_chunk_sentences))
 
             chunks_dict.append({"id": i,
-                                "url": os.path.basename(filename),
+                                "url": filename,
                                 "title": os.path.basename(filename),
                                 "chunk_text": joined_chunk_sentences,
                                 "chunk_char_count": len(joined_chunk_sentences),
@@ -690,7 +695,7 @@ class Rag:
             processed_chunk = self.lemmatize_text(self.preprocess_text(joined_chunk_sentences))
 
             chunks_dict.append({"id": i,
-                                "url": os.path.basename(filename),
+                                "url": filename,
                                 "title": os.path.basename(filename),
                                 "chunk_text": joined_chunk_sentences,
                                 "chunk_char_count": len(joined_chunk_sentences),
@@ -754,6 +759,8 @@ class Rag:
         return chunks_dict
 
     def process_uploaded_file(self, filename):
+        if self.embedding_model is None:
+            self.load_embedding_model()
         filename_without_extension, file_extension = os.path.splitext(filename)
         if file_extension == '.txt':
             chunks_dict = self.process_text_file(filename)
@@ -894,7 +901,7 @@ class Rag:
                 logging.info("Uploaded files data was read and loaded successfully.")
             print("Uploaded files data was read and loaded successfully.")
 
-    def read_focus_news_json_files(self, first_file_number=0, last_file_number=14, new_files=2):
+    def read_focus_news_json_files(self, first_file_number=0, last_file_number=10, new_files=6):
         if self.menu_language == "bulgarian":
             logging.info("Четене на focus news json файлове...")
         else:
@@ -971,7 +978,7 @@ class Rag:
         element['chunks_count'] = len(element['chunks_list'])
         return element
 
-    def load_bg_wiki_dataset_to_pickle(self, date="20250120"):
+    def load_bg_wiki_dataset_to_pickle(self, date="20251020"):
         if self.menu_language == "bulgarian":
             logging.info("Зареждане на bg wiki база данни от източника...")
         else:
@@ -1056,6 +1063,8 @@ class Rag:
             logging.info('The filtered bg wiki chunks were read successfully.')
 
     def embed_bg_wiki_chunks_filtered(self):
+        if self.embedding_model is None:
+            self.load_embedding_model()
         if self.menu_language == "bulgarian":
             logging.info('Създаване на bg wiki ембединги (embeddings)...')
         else:
@@ -1292,7 +1301,7 @@ class Rag:
                 logging.info("Database loaded successfully.")
             print("Database loaded successfully.")
 
-    def download_bg_wiki_database_and_update(self, date="20250120"):
+    def download_bg_wiki_database_and_update(self, date="20251020"):
         print("Downloading bg wiki database and updating the default database...")
         if self.menu_language == "bulgarian":
             logging.info("Изтегляне на bg wiki база данни и обновяване на основната база данни...")
@@ -1308,11 +1317,13 @@ class Rag:
             self.write_bg_wiki_chunks_dict_to_file()
             self.write_bg_wiki_faiss_index()
             self.read_bg_wiki_database()
-            if not (self.focus_news_chunk_dict and self.focus_news_faiss_index and self.focus_news_embeddings):
+            if not (self.focus_news_chunk_dict and self.focus_news_faiss_index and
+                    self.focus_news_embeddings is not None):
                 self.read_focus_news_database()
             self.unify_databases()
 
         except Exception as e:
+            logging.exception(f"ERROR: {e}", stack_info=True)
             print(f"EXCEPTION: {e}")
             if self.menu_language == "bulgarian":
                 logging.info("ГРЕШКА! ПРОБЛЕМ с изтеглянето на bg wiki база данни и обновяването на основната база "
@@ -1335,7 +1346,7 @@ class Rag:
             else:
                 logging.info("Bg wiki database downloaded and default database updated successfully.")
 
-    def update_both_databases(self, bg_wiki_dump_date="20250120"):
+    def update_both_databases(self, bg_wiki_dump_date="20251020"):
         self.read_focus_news_json_files()
         self.download_bg_wiki_database_and_update(date=bg_wiki_dump_date)
 
@@ -1423,7 +1434,14 @@ class Rag:
             print("LLM loaded successfully.")
 
     def prompt_formatter(self, query: str, context_items: list[dict]) -> [str, str]:
-        context = "- " + "\n\n- ".join([element["chunk_text"] for element in context_items])
+        # context = "- " + "\n\n- ".join([element["chunk_text"] for element in context_items])
+        context = ""
+        for element in reversed(context_items):
+            chunk = element["chunk_text"]
+            # document_name = element["url"]
+            document_title = element["title"]
+            context += f"- Откъс от документ '{document_title}':\n{chunk}\n\n"
+        # print(f"\n\nCONTEXT:\n\n{context}")
 
         bg_coefficient = in_target_language(query, lang='bg')
         en_coefficient = in_target_language(query, lang='en')
@@ -1437,9 +1455,13 @@ class Rag:
 
         prompt = f""" 
                  # Системни инструкции
-                 Ти си полезен асистент. Генерирай отговора на заявката на същия език, на който е заявката.
-                 Използвай дадения контекст, за да отговориш на заявката.
-                 Може да използваш и дадения разговор между теб (асистента) и потребителя до момента.
+                 Ти си полезен асистент, част от RAG (Retrieval-Augmented Generation) системата BG RAG, като задачата 
+                 ти е да отговориш на заявката на потребителя на база предоставения ти контекст. 
+                 Генерирай отговора си на същия език, на който е заявката.
+                 Използвай дадения контекст, за да отговориш на заявката. Контекстът се състои от няколко откъса от
+                 документи, определени като релевантни към заявката. Използвай контекста като източник на информация 
+                 при генерирането на своя отговор на заявката. 
+                 Ще ти бъде предоставен и разговорът между теб (асистента) и потребителя до момента.
                  Дай си време да помислиш и намери подходящи пасажи от дадения контекст, отнасящи се за заявката.
                  Използвай намерените пасажи, за да отговориш на заявката.
                  Отговаряй на базата на достоверна информация, която намираш в контекста.
@@ -1452,11 +1474,14 @@ class Rag:
                  неподкрепени с факти твърдения. Много важно е да си фактически коректен и отговорът ти да бъде на 
                  базата на информация в дадения контекст.
                  
-                 # Контекст (използвай контекста, за да отговориш на заявката)
-                 {context}
                  
                  # Досегашен разговор между теб (асистента) и потребителя до момента
                  {self.history_str}
+                 
+                 
+                 # Контекст (използвай контекста, за да отговориш на заявката)
+                 {context}
+                 
                  
                  # Заявка на потребителя (отговори на нея на {query_language} език)
                  {query}
@@ -1555,8 +1580,8 @@ class Rag:
             {"role": "user",
              "content": prompt}
         ]
-        llm_response = self.llm.create_chat_completion(messages=dialogue_template,
-                                                       top_k=5, temperature=0.3)
+        llm_response = self.llm.create_chat_completion(messages=dialogue_template, top_p=0.9, repeat_penalty=1.0,
+                                                       top_k=5, temperature=0.1)
         llm_response_text = llm_response["choices"][0]["message"]["content"]
 
         if llm_response_text[:2] == "Не" or llm_response_text[:2] == "не" or llm_response_text[:2] == "No" or \
@@ -1596,8 +1621,8 @@ class Rag:
             {"role": "user",
              "content": prompt}
         ]
-        llm_response = self.llm.create_chat_completion(messages=dialogue_template,
-                                                       top_k=5, temperature=0.3)
+        llm_response = self.llm.create_chat_completion(messages=dialogue_template, top_p=0.9, repeat_penalty=1.0,
+                                                       top_k=5, temperature=0.1)
         llm_response_text = llm_response["choices"][0]["message"]["content"]
         return llm_response_text
 
@@ -1670,8 +1695,8 @@ class Rag:
              "content": prompt}
         ]
 
-        llm_response = self.llm.create_chat_completion(messages=dialogue_template,
-                                                       top_k=40, temperature=0.5)
+        llm_response = self.llm.create_chat_completion(messages=dialogue_template, top_p=0.9, repeat_penalty=1.0,
+                                                       top_k=40, temperature=0.3)
         llm_response_text = llm_response["choices"][0]["message"]["content"]
         return llm_response_text
 
@@ -1711,7 +1736,7 @@ class Rag:
 
     def ask_query(self, query, use_rag_fusion=False, use_hyde=False, use_generated_subqueries=False,
                   use_relevant_resource_llm_check=False, translate_query=False,
-                  temperature=0.7, max_answer_tokens=42, return_llm_response=True, return_context_elements=True,
+                  temperature=0.1, topk=25, return_llm_response=True, return_context_elements=True,
                   return_urls=True, topn_articles=3, print_steps=False, use_uploaded_files_db=False):
 
         if translate_query:
@@ -1843,8 +1868,8 @@ class Rag:
                  "content": prompt}
             ]
 
-            llm_response = self.llm.create_chat_completion(messages=dialogue_template,
-                                                           top_k=max_answer_tokens, temperature=temperature)
+            llm_response = self.llm.create_chat_completion(messages=dialogue_template, top_p=0.9, repeat_penalty=1.0,
+                                                           top_k=topk, temperature=temperature)
 
             llm_response_text = llm_response["choices"][0]["message"]["content"]
         else:
@@ -1864,7 +1889,7 @@ class Rag:
     def ask_rag(self, query, use_rag_fusion=False, use_hyde=False, use_generated_subqueries=False,
                 use_relevant_resource_llm_check=False, translate_query=False,
                 print_query=False, print_response=False, print_urls=False, print_context_passages=False,
-                print_steps=True, temperature=0.7, max_answer_tokens=42, topn_articles=3):
+                print_steps=True, temperature=0.1, topk=25, topn_articles=3):
 
         if len(self.chunks_and_embeddings) < topn_articles:
             topn_articles = len(self.chunks_and_embeddings)
@@ -1876,7 +1901,7 @@ class Rag:
                            use_generated_subqueries=use_generated_subqueries,
                            use_relevant_resource_llm_check=use_relevant_resource_llm_check,
                            translate_query=translate_query, temperature=temperature,
-                           max_answer_tokens=max_answer_tokens, return_llm_response=return_llm_response,
+                           topk=topk, return_llm_response=return_llm_response,
                            return_context_elements=True, return_urls=True, topn_articles=topn_articles,
                            print_steps=print_steps, use_uploaded_files_db=False)
 
@@ -1889,7 +1914,7 @@ class Rag:
                                use_generated_subqueries=use_generated_subqueries,
                                use_relevant_resource_llm_check=use_relevant_resource_llm_check,
                                translate_query=translate_query, temperature=temperature,
-                               max_answer_tokens=max_answer_tokens, return_llm_response=return_llm_response,
+                               topk=topk, return_llm_response=return_llm_response,
                                return_context_elements=True, return_urls=True, topn_articles=topn_articles,
                                print_steps=print_steps, use_uploaded_files_db=True)
 
@@ -1924,8 +1949,8 @@ class Rag:
                  "content": prompt}
             ]
 
-            llm_response = self.llm.create_chat_completion(messages=dialogue_template,
-                                                           top_k=max_answer_tokens, temperature=temperature)
+            llm_response = self.llm.create_chat_completion(messages=dialogue_template, top_p=0.9, repeat_penalty=1.0,
+                                                           top_k=topk, temperature=temperature)
 
             llm_response_text = llm_response["choices"][0]["message"]["content"]
 
@@ -1997,7 +2022,7 @@ class Rag:
         return llm_response_text, relevant_urls
 
     def ask_llm(self, query, use_chat_history=False, print_query=False, print_response=False,
-                temperature=0.7, max_answer_tokens=42):
+                temperature=0.1, topk=25):
         bg_coefficient = in_target_language(query, lang='bg')
         en_coefficient = in_target_language(query, lang='en')
         if bg_coefficient >= en_coefficient:
@@ -2053,8 +2078,8 @@ class Rag:
             {"role": "user",
              "content": prompt}
         ]
-        llm_response = self.llm.create_chat_completion(messages=dialogue_template, top_k=max_answer_tokens,
-                                                       temperature=temperature)
+        llm_response = self.llm.create_chat_completion(messages=dialogue_template,  top_p=0.9,  repeat_penalty=1.0,
+                                                       top_k=topk, temperature=temperature)
         llm_response_text = llm_response["choices"][0]["message"]["content"]
         if print_query:
             print(f"Query: {query}")
@@ -2125,8 +2150,8 @@ class Rag:
              "content": prompt}
         ]
 
-        llm_response = self.llm.create_chat_completion(messages=dialogue_template,
-                                                       top_k=40, temperature=0.3)
+        llm_response = self.llm.create_chat_completion(messages=dialogue_template, top_p=0.9, repeat_penalty=1.0,
+                                                       top_k=40, temperature=0.1)
         llm_response_text = llm_response["choices"][0]["message"]["content"]
         return llm_response_text
 
@@ -2145,8 +2170,8 @@ class Rag:
             {"role": "user",
              "content": prompt}
         ]
-        llm_response = self.llm.create_chat_completion(messages=dialogue_template,
-                                                       top_k=1, temperature=0.3)
+        llm_response = self.llm.create_chat_completion(messages=dialogue_template, top_p=0.9, repeat_penalty=1.0,
+                                                       top_k=1, temperature=0.1)
         llm_response_text = llm_response["choices"][0]["message"]["content"]
         if llm_response_text[:2] == "Не" or llm_response_text[:2] == "не" or llm_response_text[:2] == "No" or \
                 llm_response_text[:2] == "no":
@@ -2175,8 +2200,8 @@ class Rag:
              "content": prompt}
         ]
 
-        llm_response = self.llm.create_chat_completion(messages=dialogue_template,
-                                                       top_k=1, temperature=0.3)
+        llm_response = self.llm.create_chat_completion(messages=dialogue_template, top_p=0.9, repeat_penalty=1.0,
+                                                       top_k=1, temperature=0.1)
         llm_response_text = llm_response["choices"][0]["message"]["content"]
         return llm_response_text
 
@@ -2234,8 +2259,8 @@ class Rag:
              "content": prompt}
         ]
 
-        llm_response = self.llm.create_chat_completion(messages=dialogue_template,
-                                                       top_k=40, temperature=0.5)
+        llm_response = self.llm.create_chat_completion(messages=dialogue_template, top_p=0.9, repeat_penalty=1.0,
+                                                       top_k=40, temperature=0.1)
         llm_response_text = llm_response["choices"][0]["message"]["content"]
         if print_result:
             print("Shortened chat conversation:")
@@ -2344,22 +2369,34 @@ class Rag:
                      не променяй изобщо заявката, а я върни абсолютно същата.
                      
                      # Пример 1
-                     Пример за заявка, имаща нужда от модифициране: "При нужда, модифицирай тази заявка: Кога е 
-                     спечелил първия си трофей?" - Не се разбира за кого се пита, има нужда от преглед на 
-                     разговора до момента, за да се разбере.
-                     Тогава трябва да се допълни въпроса с името на човека, за когото се пита на база разговора
-                     до момента. (Примерно отговаряш така: "Кога Рафаел Надал е спечелил първия си трофей?")
+                     Пример за заявка, имаща нужда от модифициране: 
+                     "При нужда, модифицирай тази заявка: А каква е библиографията към нея?" - 
+                     Не се разбира кое стои зад думата 'нея', за библиография към какво се има предвид. Затова трябва 
+                     да се прегледа разговорът до момента. 
+                     (Примерно, ако в разговора се говори за някаква научна статия на определен автор, отговаряш така: 
+                     "А каква е библиографията към научната статия "име на научната статия, ако има такова" на автора 
+                     "име на автора"?"). Идеята е максимално подробно да се добави липсващ контекст в заявката.
                      
                      # Пример 2
-                     Пример за заявка, имаща нужда от модифициране: "При нужда, модифицирай тази заявка: Кога е 
-                     написана книгата?" - Не се разбира за коя книга се пита, има нужда от преглед на 
-                     разговора до момента, за да се разбере.
+                     Пример за заявка, имаща нужда от модифициране: 
+                     "При нужда, модифицирай тази заявка: А какви са неговите постижения?" - 
+                     Не се разбира кой стои зад думата 'неговите' (винаги заменяй думи като него/нея/го/я/той/тя/то 
+                     и т.н. с конкретното лице, тема, или нещо, което стои зад тези местоимения), за постиженията на 
+                     кого се има предвид. 
+                     (Примерно, ако в разговора се говори за даден човек, отговаряш така: 
+                     "А какви са постиженията на "името на дадения човек"?")
+                     
+                     # Пример 3
+                     Пример за заявка, имаща нужда от модифициране: 
+                     "При нужда, модифицирай тази заявка: Кога е написана книгата?" - Не се разбира за коя книга се 
+                     пита, има нужда от преглед на разговора до момента, за да се разбере.
                      Тогава трябва да се допълни въпроса със заглавието на книгата, за която се пита на база разговора
                      до момента. (Примерно отговаряш така: "Кога е написана книгата "Под игото"?")
                      
-                     # Пример 3
-                     Пример за заявка, имаща нужда от модифициране: "При нужда, модифицирай тази заявка: 'Кой се 
-                     занимава с въвеждането на тези мерки и с мониторинга за тяхното спазване в България?' - 
+                     # Пример 4
+                     Пример за заявка, имаща нужда от модифициране: 
+                     "При нужда, модифицирай тази заявка: 'Кой се занимава с въвеждането на тези мерки и с мониторинга 
+                     за тяхното спазване в България?' - 
                      Не се разбира кои са тези мерки има нужда от преглед на 
                      разговора до момента, за да се разбере.
                      Тогава трябва да се допълни въпроса със заглавието на книгата, за която се пита на база разговора
@@ -2368,15 +2405,34 @@ class Rag:
                      "Кой се занимава с въвеждането на тези мерки за намаляване на замърсяването на въздуха в 
                      градовете и с мониторинга за тяхното спазване в България?")
                      
-                     # Пример 4
-                     Пример за заявка, която е самодостатъчна: "При нужда, модифицирай тази заявка: Кога България
-                     е основана като държава?" -
+                     # Пример 5
+                     Пример за заявка, имаща нужда от модифициране: 
+                     "При нужда, модифицирай тази заявка: А има ли постигнати успехи на други първенства?" - 
+                     Не се разбира за кого се говори и за кои първенства и за какъв спорт става дума.
+                     Трябва да се допълни въпроса с тези неща. 
+                     (Примерно, ако в разговора се говори за постигнатите успехи на България на световните 
+                     първенства по волейбол, отговаряш така: 
+                     "А има ли България постигнати успехи на други първенства по волейбол, освен на световното 
+                     първенство?")
+                     
+                     # Пример 6
+                     Пример за заявка, която е самодостатъчна: 
+                     "При нужда, модифицирай тази заявка: Кога България е основана като държава?" -
                      В този случай заявката е напълно изчерпателна, разбира се изцяло за какво се пита, връща се
                      същата заявка (Отговаряш така: "Кога България е основана като държава?").
                      В отговора си върни единствено своя резултат (променената заявка или същата заявка) без да 
                      добавяш разсъждения в отговора си. 
                      Нека върнатата от теб заявка да бъде на същия език, както дадената заявка. 
                      
+                     # Пример 7
+                     Пример за заявка, имаща нужда от модифициране: 
+                     "При нужда, модифицирай тази заявка: Кога е спечелил първия си трофей?" - Не се разбира за кого 
+                     се пита, има нужда от преглед на разговора до момента, за да се разбере.
+                     Тогава трябва да се допълни въпроса с името на човека, за когото се пита на база разговора
+                     до момента. (Примерно отговаряш така: "Кога Рафаел Надал е спечелил първия си трофей?")
+                     
+                     # От тук надолу следват данни, които ти трябва да използваш за твоята задача:
+    
                      # Разговор до момента
                      {self.history_str} 
                      
@@ -2389,7 +2445,7 @@ class Rag:
              "content": prompt}
         ]
 
-        llm_response = self.llm.create_chat_completion(messages=dialogue_template,
+        llm_response = self.llm.create_chat_completion(messages=dialogue_template, top_p=0.9, repeat_penalty=1.0,
                                                        top_k=1, temperature=0.1)
         llm_response_text = llm_response["choices"][0]["message"]["content"]
         if print_result:
@@ -2432,8 +2488,8 @@ class Rag:
              "content": prompt}
         ]
 
-        llm_response = self.llm.create_chat_completion(messages=dialogue_template,
-                                                       top_k=1, temperature=0.3)
+        llm_response = self.llm.create_chat_completion(messages=dialogue_template, top_p=0.9, repeat_penalty=1.0,
+                                                       top_k=1, temperature=0.1)
         llm_response_text = llm_response["choices"][0]["message"]["content"]
         if print_response:
             print("Is the text entered by the user a query?")
@@ -2492,8 +2548,8 @@ class Rag:
              "content": prompt}
         ]
 
-        llm_response = self.llm.create_chat_completion(messages=dialogue_template,
-                                                       top_k=1, temperature=0.3)
+        llm_response = self.llm.create_chat_completion(messages=dialogue_template, top_p=0.9, repeat_penalty=1.0,
+                                                       top_k=1, temperature=0.1)
         llm_response_text = llm_response["choices"][0]["message"]["content"]
         if print_response:
             print("Does the query need modification in order to be self-sufficient?")
@@ -2531,7 +2587,7 @@ class Rag:
              "content": prompt}
         ]
 
-        llm_response = self.llm.create_chat_completion(messages=dialogue_template,
+        llm_response = self.llm.create_chat_completion(messages=dialogue_template, top_p=0.9, repeat_penalty=1.0,
                                                        top_k=1, temperature=0.1)
         llm_response_text = llm_response["choices"][0]["message"]["content"]
         if print_answer:
@@ -2573,7 +2629,7 @@ class Rag:
             {"role": "user",
              "content": prompt}
         ]
-        llm_response = self.llm.create_chat_completion(messages=dialogue_template,
+        llm_response = self.llm.create_chat_completion(messages=dialogue_template, top_p=0.9, repeat_penalty=1.0,
                                                        top_k=1, temperature=0.1)
         translated_query = llm_response["choices"][0]["message"]["content"]
         return translated_query
@@ -2582,7 +2638,7 @@ class Rag:
                    use_generated_subqueries=False, use_relevant_resource_llm_check=False, use_default_db=True,
                    use_uploaded_db=False, modify_query=True, translate_query=False,
                    print_query=False, print_response=False, print_urls=False,
-                   print_context_passages=False, print_steps=True, temperature=0.7, max_answer_tokens=42,
+                   print_context_passages=False, print_steps=True, temperature=0.1, topk=25,
                    topn_articles=3):
 
         self.use_default_db = use_default_db
@@ -2662,7 +2718,7 @@ class Rag:
                                                        print_urls=print_urls,
                                                        print_context_passages=print_context_passages,
                                                        print_steps=print_steps, temperature=temperature,
-                                                       max_answer_tokens=max_answer_tokens, topn_articles=topn_articles)
+                                                       topk=topk, topn_articles=topn_articles)
             except Exception as e:
                 logging.exception(f"ERROR: {e}", stack_info=True)
                 print(f"ERROR: {e}")
@@ -2703,3 +2759,11 @@ class Rag:
         self.unsaved_chat_history.append(system_response)
         self.unsaved_relevant_resources_history.append(relevant_urls)
         return response, relevant_urls
+
+
+# example how to make an evaluation of the system (first make sure that self.evaluation_mode = True)
+# rag = Rag()
+# rag.read_evaluation_df()
+# rag.evaluate_system()
+# rag.print_evaluation_results()
+# rag.calculate_evaluation_averages(language="bg")

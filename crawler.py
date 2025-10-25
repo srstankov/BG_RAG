@@ -16,8 +16,8 @@ requests_session.mount('https://', HTTPAdapter(max_retries=retries))
 
 URL_TMPL = "https://www.focus-news.net/novini/{}.html"
 
-LAST_ARTICLE = 2438802
-FIRST_ARTICLE = 2400000
+LAST_ARTICLE = 2758000
+FIRST_ARTICLE = 2700000
 DELAY = 0.5
 
 urls = [URL_TMPL.format(x)
@@ -27,7 +27,8 @@ real_urls = []
 
 for url in urls:
     r = requests_session.get(url, allow_redirects=True, timeout=10)
-    if r.status_code == 200 and not r.url == "https://www.focus-news.net/":
+    if r.status_code == 200 and not r.url == "https://www.focus-news.net/" and \
+            not r.url == "https://www.focus-news.net/sport":
         real_urls.append(url)
 
 
