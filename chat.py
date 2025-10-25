@@ -193,8 +193,9 @@ class ChatOutput(ctk.CTkScrollableFrame):
                         resource_label_7.pack(side=ctk.TOP, anchor='w', padx=20, pady=1, expand=True)
         self._parent_canvas.yview_moveto(1.0)
 
-    def animate_waiting_label(self):
-        self._parent_canvas.yview_moveto(1.0)
+    def animate_waiting_label(self, i=1):
+        if i == 2:
+            self._parent_canvas.yview_moveto(1.0)
         if self.time_to_stop_waiting_animation:
             self._parent_canvas.yview_moveto(1.0)
             return
@@ -203,7 +204,8 @@ class ChatOutput(ctk.CTkScrollableFrame):
             self.dots_str.set('.')
         else:
             self.dots_str.set(self.dots_str.get() + '.')
-        self.after(1000, self.animate_waiting_label)
+        i += 1
+        self.after(1000, lambda: self.animate_waiting_label(i))
 
     def rag_response_text_callback(self, rag_response, relevant_resources, *args):
         self.waiting_rag_label.pack_forget()
