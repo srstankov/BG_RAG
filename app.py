@@ -70,10 +70,12 @@ class App(ctk.CTk):
         load_thread.start()
 
     def load_rag_databases(self):
-        self.rag.load_embedding_model()
         # self.rag.update_both_databases()  # when the default database has been updated to a newer version uncomment
+
         self.rag.load_llm()
+        self.rag.load_embedding_model()
         self.rag.load_reranking_model()
+
         self.rag.read_database()
         if os.path.exists(resource_path('imported_files.txt', app_generated_file=True)):
             self.rag.read_uploaded_files_data()
