@@ -2777,7 +2777,9 @@ class Rag:
         return response, relevant_urls
 
 
-# example how to make an evaluation of the system (first make sure that self.evaluation_mode = True)
+# example how to make an evaluation of the system (first make sure that self.evaluation_mode = True when asking queries
+#                                                  to the system so that the queries, the retrieved context for them
+#                                                  and the answers of the system are saved to "evaluation_df.pkl" file)
 # rag = Rag()
 # rag.read_evaluation_df()
 # rag.evaluate_system()
