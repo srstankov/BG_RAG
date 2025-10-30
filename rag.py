@@ -1483,7 +1483,7 @@ class Rag:
                  {context}
                  
                  
-                 # Заявка на потребителя (отговори на нея на {query_language} език)
+                 # Заявка на потребителя (отговори на нея на {query_language} език на база предоставения контекст)
                  {query}
                  """
         return prompt
@@ -2784,4 +2784,5 @@ class Rag:
 # rag.read_evaluation_df()
 # rag.evaluate_system()
 # rag.print_evaluation_results()
-# rag.calculate_evaluation_averages(language="bg")
+# rag.calculate_evaluation_averages(language="bg") # if the queries are in bulgarian
+# rag.calculate_evaluation_averages(language="en") # if the queries are in english
