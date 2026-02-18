@@ -10,7 +10,7 @@ Based on the available VRAM, a suitable **GGUF quantized version** of the LLM is
 
 ## **Key Features**
 - **Document Management:** Users can upload their own text documents (PDF, DOC, DOCX, TXT, and JSON) to perform context-aware queries. The system supports both Bulgarian and English.
-- **Built-in Database:** Includes a pre-indexed "Main Database" containing articles from Bulgarian Wikipedia and crawled news from **Focus News**.
+- **Built-in Database:** Includes a pre-indexed "Main Database" containing articles from **Bulgarian Wikipedia** and crawled news from **Focus News**.
 - **Hybrid Search:** Uses a combination of **vector and keyword search**, followed by a reranking stage for maximum accuracy.
 - **Advanced Retrieval:** Includes features like **RAG Fusion, HyDE, and Generated Sub-queries**. Other features include query translation for cross-lingual search and a "Check relevant resources" mode powered by the LLM.
 - **Transparency:** The system displays retrieved resources under the generated answer. A dedicated **Log tab** allows users to inspect the specific retrieved chunks and background processes.
