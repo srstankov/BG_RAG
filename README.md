@@ -1,26 +1,31 @@
-This is my Master's Thesis project at the Faculty of Mathematics and Informatics (FMI), Sofia University.
+# BG-RAG: Local RAG System with BgGPT
 
-This is a RAG (Retrieval-Augmented Generation) system (chatbot, dialogue system) that is designed to work locally on the user's computer and uses BgGPT (https://huggingface.co/INSAIT-Institute/BgGPT-Gemma-2-9B-IT-v1.0) by INSAIT as an LLM. BgGPT is based on Google Gemma 2 and is built specifically to improve the LLM's performance for the Bulgarian language.
+> **Master's Thesis Project**  
+> **Faculty of Mathematics and Informatics (FMI), Sofia University "St. Kliment Ohridski"**
 
-Based on the VRAM available on the user's computer a suitable GGUF quantized version of the LLM is downloaded when the system is started for the first time. Also an embedding model is downloaded (BAAI/bge-m3BGE-M3) as well as a reranking model (jinaai/jina-reranker-v2-base-multilingual).
+This is a **Retrieval-Augmented Generation (RAG)** system (chatbot/dialogue system) designed to work locally on the user's computer. It utilizes **BgGPT** (Gemma-2-9B-IT-v1.0 by INSAIT), which is specifically optimized to improve LLM performance for the Bulgarian language.
 
-The user can upload their own text documents in the system and ask queries on them. The documents can be in Bulgarian or in English. 
+## **How it Works**
+Based on the available VRAM, a suitable **GGUF quantized version** of the LLM is automatically downloaded upon the first run. The system also downloads an embedding model (**BGE-M3**) and a reranking model (**jina-reranker-v2-base-multilingual**).
 
-The system also has a built-in database (main database) containing articles from the Bulgarian Wikipedia and crawled news articles from the Bulgarian news site Focus (https://www.focus-news.net/).
+## **Key Features**
+- **Document Management:** Users can upload their own text documents (PDF, DOC, DOCX, TXT, and JSON) to perform context-aware queries. The system supports both Bulgarian and English.
+- **Built-in Database:** Includes a pre-indexed "Main Database" containing articles from Bulgarian Wikipedia and crawled news from **Focus News**.
+- **Hybrid Search:** Uses a combination of **vector and keyword search**, followed by a reranking stage for maximum accuracy.
+- **Advanced Retrieval:** Includes features like **RAG Fusion, HyDE, and Generated Sub-queries**. Other features include query translation for cross-lingual search and a "Check relevant resources" mode powered by the LLM.
+- **Transparency:** The system displays retrieved resources under the generated answer. A dedicated **Log tab** allows users to inspect the specific retrieved chunks and background processes.
+- **User Interface:** The menu is available in Bulgarian and English, including a **Help tab** with instructions and an **Import tab** for document management.
 
-The retrieved relevant resources for a query will be displayed under the generated answer by the system. In the Log tab of the menu can be seen also the specific retrieved chunks.
+## **System Requirements**
+- **OS:** Windows 10
+- **GPU:** NVIDIA GPU (Recommended: **12 GB VRAM**; Minimum: **6-8 GB VRAM**)
+- **RAM:** At least **16 GB**
+- **Internet:** Required only for the initial download of the models
 
-The RAG system uses hybrid search (vector + keywords search) as its main search method, followed by reranking. 
+## **Optimization Note**
+If the system runs slowly or RAM is limited, users can disable the "Main Database" by deleting the `db_chunks_and_embeddings.pkl` and `faiss_vector_db.index` files in the `_internal` subfolder. The system will continue to work perfectly with user-imported documents.
 
-The user can use also additional methods to improve the retrieval process in the system such as RAG Fusion, HyDE, Generated subqueries. Other metods available are Check relevant resources by LLM, Translate query for searching in documents in both Bulgarian and English and other useful features.
-
-The menu of the system is available in Bulgarian and English. The Help tab can be used to understand how the system works and it also provides instructions how to use the user interface. The Import tab offers the user to import their own text documents (PDF, DOC, DOCX, TXT and JSON (for crawled sites, must have the columns 'id', 'url', 'title', 'text')).
-
-The recommended VRAM is 12 GB, the minimum requirements is around 6-8 GB of VRAM. The RAM should be at least 16 GB. 
-
-The system works on Windows 10. The user can download all required installation files from the latest release and then should run the installer (BG_RAG_1.0.0_windows_setup.exe) to install the system locally.
-
-If the system works really slowly or there is not enough available RAM on the user's computer or the user does not want to use the main database, the files "db_chunks_and_embeddings.pkl" and "faiss_vector_db.index" can be deleted in the "_internal" subfolder of the installation directory (by default the installation directory location is "C:\Program Files\BG RAG"). Doing so, the main database will not be available, but the system can still work with the files that the user has imported in the system by the 'Import' tab. 
-
-Internet connection is required only for the first run of the system after the installation in order for the models used by the system to be downloaded.
-
+## **Installation**
+1. Download all required installation files from the **latest release**.
+2. Run the installer: `BG_RAG_1.0.0_windows_setup.exe`.
+3. Ensure an internet connection is active for the first run to download the necessary models.
