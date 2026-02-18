@@ -7,6 +7,7 @@
 This is a **Retrieval-Augmented Generation (RAG)** system (chatbot/dialogue system) designed to work locally on the user's computer. It utilizes **BgGPT** (Gemma-2-9B-IT-v1.0 by INSAIT), which is specifically optimized to improve LLM performance for the Bulgarian language.
 
 ### 📺 **System Demo Video (in Bulgarian)**
+[Watch the Demo Video here](BG_RAG_demo.mp4)
 
 ## **Key Features**
 - **Document Management:** Users can upload their own text documents (PDF, DOC, DOCX, TXT, and JSON) to perform context-aware queries. The system supports both Bulgarian and English.
