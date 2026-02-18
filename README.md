@@ -6,8 +6,7 @@
 
 This is a **Retrieval-Augmented Generation (RAG)** system (chatbot/dialogue system) designed to work locally on the user's computer. It utilizes **BgGPT** (Gemma-2-9B-IT-v1.0 by INSAIT), which is specifically optimized to improve LLM performance for the Bulgarian language.
 
-## **How it Works**
-Based on the available VRAM, a suitable **GGUF quantized version** of the LLM is automatically downloaded upon the first run. The system also downloads an embedding model (**BGE-M3**) and a reranking model (**jina-reranker-v2-base-multilingual**).
+### 📺 **System Demo Video (in Bulgarian)**
 
 ## **Key Features**
 - **Document Management:** Users can upload their own text documents (PDF, DOC, DOCX, TXT, and JSON) to perform context-aware queries. The system supports both Bulgarian and English.
@@ -26,6 +25,9 @@ Based on the available VRAM, a suitable **GGUF quantized version** of the LLM is
     - **Save Tab:** Functionality to export the entire conversation history into a structured text file for future reference.
     - **Log Tab:** Real-time visibility into background operations, retrieved document chunks, and internal system processes.
     - **Help Tab:** Detailed user documentation and step-by-step instructions on how to operate the system effectively.
+      
+## **Model Deployment & Adaptation**
+Based on the available VRAM, a suitable **GGUF quantized version** of the LLM is automatically downloaded upon the first run. The system also downloads an embedding model (**BGE-M3**) and a reranking model (**jina-reranker-v2-base-multilingual**).
 
 ## **System Requirements**
 - **OS:** Windows 10
