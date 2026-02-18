@@ -1,3 +1,5 @@
+This is my Master's Thesis project at the Faculty of Mathematics and Informatics (FMI), Sofia University.
+
 This is a RAG (Retrieval-Augmented Generation) system (chatbot, dialogue system) that is designed to work locally on the user's computer and uses BgGPT (https://huggingface.co/INSAIT-Institute/BgGPT-Gemma-2-9B-IT-v1.0) by INSAIT as an LLM. BgGPT is based on Google Gemma 2 and is built specifically to improve the LLM's performance for the Bulgarian language.
 
 Based on the VRAM available on the user's computer a suitable GGUF quantized version of the LLM is downloaded when the system is started for the first time. Also an embedding model is downloaded (BAAI/bge-m3BGE-M3) as well as a reranking model (jinaai/jina-reranker-v2-base-multilingual).
@@ -20,5 +22,5 @@ The system works on Windows 10. The user can download all required installation 
 
 If the system works really slowly or there is not enough available RAM on the user's computer or the user does not want to use the main database, the files "db_chunks_and_embeddings.pkl" and "faiss_vector_db.index" can be deleted in the "_internal" subfolder of the installation directory (by default the installation directory location is "C:\Program Files\BG RAG"). Doing so, the main database will not be available, but the system can still work with the files that the user has imported in the system by the 'Import' tab. 
 
-Internet is required only for the first run of the system after the installation in order for the models used by the system to be downloaded.
+Internet connection is required only for the first run of the system after the installation in order for the models used by the system to be downloaded.
 
