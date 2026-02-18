@@ -1,7 +1,7 @@
 # BG-RAG: Local RAG System with BgGPT
 
 > **Master's Thesis**  
-> **Faculty of Mathematics and Informatics (FMI), Sofia University "St. Kliment Ohridski"**
+> **Sofia University "St. Kliment Ohridski", Faculty of Mathematics and Informatics (FMI)**
 
 This is a **Retrieval-Augmented Generation (RAG)** system (chatbot/dialogue system) designed to work locally on the user's computer. It utilizes **BgGPT** (Gemma-2-9B-IT-v1.0 by INSAIT), which is specifically optimized to improve LLM performance for the Bulgarian language.
 
