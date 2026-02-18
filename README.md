@@ -1,4 +1,4 @@
-# BG-RAG: Local RAG System with BgGPT
+# BG RAG: Local RAG System with BgGPT
 
 > **Master's Thesis**
 > **Author: Svetlomir Stankov**
