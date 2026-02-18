@@ -9,6 +9,7 @@ This is a **Retrieval-Augmented Generation (RAG)** system (chatbot/dialogue syst
 ### 📺 **System Demo Video (in Bulgarian)**
 [Watch the Demo Video here](BG_RAG_demo.mp4)
 
+
 ## **Key Features**
 - **Document Management:** Users can upload their own text documents (PDF, DOC, DOCX, TXT, and JSON) to perform context-aware queries. The system supports both Bulgarian and English.
 - **Built-in Database:** Includes a pre-indexed "Main Database" containing articles from **Bulgarian Wikipedia** and crawled news from **Focus News**.
@@ -26,9 +27,11 @@ This is a **Retrieval-Augmented Generation (RAG)** system (chatbot/dialogue syst
     - **Save Tab:** Functionality to export the entire conversation history into a structured text file for future reference.
     - **Log Tab:** Real-time visibility into background operations, retrieved document chunks, and internal system processes.
     - **Help Tab:** Detailed user documentation and step-by-step instructions on how to operate the system effectively.
+
       
 ## **Model Deployment & Adaptation**
 Based on the available VRAM, a suitable **GGUF quantized version** of the LLM is automatically downloaded upon the first run. The system also downloads an embedding model (**BGE-M3**) and a reranking model (**jina-reranker-v2-base-multilingual**).
+
 
 ## **System Requirements**
 - **OS:** Windows 10
@@ -36,8 +39,10 @@ Based on the available VRAM, a suitable **GGUF quantized version** of the LLM is
 - **RAM:** At least **16 GB**
 - **Internet:** Required only for the initial download of the models
 
+
 ## **Optimization Note**
 If the system runs slowly or RAM is limited, users can disable the "Main Database" by deleting the `db_chunks_and_embeddings.pkl` and `faiss_vector_db.index` files in the `_internal` subfolder. The system will continue to work perfectly with user-imported documents.
+
 
 ## **Installation**
 1. Download all required installation files from the **latest release**.
