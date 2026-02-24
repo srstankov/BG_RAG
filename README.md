@@ -13,7 +13,7 @@ https://github.com/srstankov/BG_RAG/raw/main/BG_RAG_demo.mp4
 ## **Key Features**
 - **Document Management:** Users can upload their own text documents (PDF, DOC, DOCX, TXT, and JSON) to perform context-aware queries. The system supports both Bulgarian and English.
 - **Built-in Database:** Includes a pre-indexed "Main Database" containing articles from **Bulgarian Wikipedia** and crawled news from **Focus News**.
-- **Hybrid Search:** Uses a combination of **vector and keyword search**, followed by a reranking stage for maximum accuracy.
+- **Hybrid Search:** Uses a combination of **vector and keyword search**, followed by a reranking stage for maximum accuracy. FAISS is utilized as the vector database.
 - **Contextual Query Modification:** Enhances multi-turn dialogue by modifying follow-up queries based on the chat history, ensuring the retrieval remains relevant to the ongoing conversation.
 - **Advanced Retrieval Techniques:** Users can choose from several advanced methods to enhance search accuracy: **RAG Fusion**, **HyDE**, and **Generated Subqueries (Query Decomposition)**.
 - **Sentence-based Chunking:** Documents are processed using a sentence-based chunking strategy (e.g., **20 sentences per chunk with a 2-sentence overlap**) to maintain context, while smaller documents are preserved in their entirety.
