@@ -16,7 +16,7 @@ https://github.com/srstankov/BG_RAG/raw/main/BG_RAG_demo.mp4
 - **Hybrid Search:** Uses a combination of **vector and keyword search**, followed by a reranking stage for maximum accuracy. FAISS is utilized as the vector database.
 - **Contextual Query Modification:** Enhances multi-turn dialogue by modifying follow-up queries based on the chat history, ensuring the retrieval remains relevant to the ongoing conversation.
 - **Advanced Retrieval Techniques:** Users can choose from several advanced methods to enhance search accuracy: **RAG Fusion**, **HyDE**, and **Generated Subqueries (Query Decomposition)**.
-- **Sentence-based Chunking:** Documents are processed using a sentence-based chunking strategy (e.g., 20 sentences per chunk with a 2-sentence overlap) to maintain context, while smaller documents are preserved in their entirety.
+- **Sentence-based Chunking:** Documents are processed using a sentence-based chunking strategy (20 sentences per chunk with a 2-sentence overlap) to maintain context, while smaller documents are preserved in their entirety.
 - **LLM-Powered Refinement:** Features a **"Check relevant resources"** mode, where the LLM acts as a final validator to filter and refine the retrieved document chunks before they are included in the context.
 - **Multilingual Support:** Includes **Query Translation** for seamless cross-lingual search across both Bulgarian and English document collections.
 - **Customizable Context:** Users can adjust the **number of retrieved chunks (Top-N)** used as context for the model to optimize accuracy and performance.
