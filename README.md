@@ -18,7 +18,7 @@ https://github.com/srstankov/BG_RAG/raw/main/BG_RAG_demo.mp4
 - **Advanced Retrieval Techniques:** Users can choose from several advanced methods to enhance search accuracy: **RAG Fusion**, **HyDE**, and **Generated Subqueries (Query Decomposition)**.
 - **Sentence-based Chunking:** Documents are processed using a sentence-based chunking strategy (20 sentences per chunk with a 2-sentence overlap) to maintain context, while smaller documents are preserved in their entirety.
 - **LLM-Powered Refinement:** Features a **"Check relevant resources"** mode, where the LLM acts as a final validator to filter and refine the retrieved document chunks before they are included in the context.
-- **Multilingual Support:** Includes **Query Translation** for seamless cross-lingual search across both Bulgarian and English document collections.
+- **Bilingual Support:** Includes **Query Translation** for seamless cross-lingual search across both Bulgarian and English document collections.
 - **Customizable Context:** Users can adjust the **number of retrieved chunks (Top-N)** used as context for the model to optimize accuracy and performance.
 - **Transparency:** The system displays retrieved resources under the generated answer. A dedicated **Log tab** allows users to inspect the specific retrieved chunks and background processes.
 - **Interactive User Interface:** A comprehensive menu system designed for ease of use, featuring several specialized modules:
